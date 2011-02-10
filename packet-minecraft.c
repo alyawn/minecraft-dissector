@@ -137,6 +137,12 @@ static gint hf_mc_block_meta_byte = -1;
 static gint hf_mc_item_code = -1;
 static gint hf_mc_amount = -1;
 static gint hf_mc_life = -1;
+static gint hf_mc_login_protocol_version = -1;
+static gint hf_mc_login_username = -1;
+static gint hf_mc_login_password = -1;
+static gint hf_mc_login_map_seed = -1;
+static gint hf_mc_login_dimension = -1;
+static gint hf_mc_login_entity_id = -1;
 
 void proto_register_minecraft(void)
 {
@@ -265,10 +271,15 @@ void proto_register_minecraft(void)
             { &hf_mc_life,
               {"Life", "mc.life", FT_INT16, BASE_DEC, NULL, 0x0, "Life", HFILL }
             },
-
+            { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
+            { &hf_mc_login_entity_id, {"Player entity ID", "mc.playerid", FT_INT32, BASE_DEC, NULL, 0x0, "Player entity ID", HFILL } },
+            { &hf_mc_login_username, {"username", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
+            { &hf_mc_login_password, {"password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
+            { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },
+            { &hf_mc_login_dimension, {"Dimension", "mc.dimension", FT_INT8, BASE_DEC, NULL, 0x0, "Dimension", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
-                              "Minecraft Alpha SMP Protocol", /* name */
+                              "Minecraft Beta v9 SMP Protocol", /* name */
                               "Minecraft",          /* short name */
                               "mc"	         /* abbrev */
                           );
@@ -292,23 +303,39 @@ void proto_reg_handoff_minecraft(void)
     }
 }
 
-static void add_login_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+static void add_login_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
 {
     guint16 strlen1, strlen2;
 
-    strlen1 = tvb_get_ntohs( tvb, offset + 5 );
-    proto_tree_add_item(tree, hf_mc_server_name, tvb, offset + 5, strlen1, FALSE);
+    offset += 1;
 
-    strlen2 = tvb_get_ntohs( tvb, offset + 5 + strlen1 + 2 );
-    proto_tree_add_item(tree, hf_mc_motd, tvb, offset + 5 + strlen1 + 2, strlen2, FALSE);
+    proto_tree_add_item(tree, c2s?hf_mc_login_protocol_version:hf_mc_login_entity_id, tvb, offset, 4, FALSE);
+    offset += 4;
+
+    strlen1 = tvb_get_ntohs( tvb, offset );
+    offset += 2;
+    proto_tree_add_item(tree, c2s?hf_mc_login_username:hf_mc_server_name, tvb, offset, strlen1, FALSE);
+    offset += strlen1;
+
+    strlen2 = tvb_get_ntohs( tvb, offset );
+    offset += 2;
+    proto_tree_add_item(tree, c2s?hf_mc_login_password:hf_mc_motd, tvb, offset, strlen2, FALSE);
+    offset += strlen2;
+
+    proto_tree_add_item(tree, hf_mc_login_map_seed, tvb, offset, 8, FALSE);
+    offset += 8;
+    proto_tree_add_item(tree, hf_mc_login_dimension, tvb, offset, 1, FALSE);
 }
-static void add_handshake_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+
+static void add_handshake_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
 {
     guint16 strlen1;
+    gint hf = c2s ? hf_mc_username : hf_mc_serverid;
 
     strlen1 = tvb_get_ntohs( tvb, offset + 1 );
-    proto_tree_add_item(tree, hf_mc_serverid, tvb, offset + 3, strlen1, FALSE);
+    proto_tree_add_item(tree, hf, tvb, offset + 3, strlen1, FALSE);
 }
+
 static void add_chat_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
     guint16 strlen1;
@@ -519,15 +546,17 @@ static void add_relative_entity_move_look_details( proto_tree *tree, tvbuff_t *t
 
 static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, guint8 type,  guint32 offset, guint32 length)
 {
+    gboolean c2s;
     if (check_col(pinfo->cinfo, COL_PROTOCOL))
         col_set_str(pinfo->cinfo, COL_PROTOCOL, PROTO_TAG_MC);
     /* Clear out stuff in the info column */
 //    if(check_col(pinfo->cinfo,COL_INFO)){
 //        col_clear(pinfo->cinfo,COL_INFO);
 //    }
+    c2s = pinfo->match_port == pinfo->destport;
 
     if (check_col(pinfo->cinfo, COL_INFO)) {
-        col_add_fstr(pinfo->cinfo, COL_INFO, pinfo->match_port == pinfo->destport ? "C->S" : "S->C" ": %d > %d Info Type:[%s]",
+        col_add_fstr(pinfo->cinfo, COL_INFO, c2s ? "C->S" : "S->C" ": %d > %d Info Type:[%s]",
                      pinfo->srcport, pinfo->destport,
                      val_to_str(type, packettypenames, "Unknown Type:0x%02x"));
     }
@@ -539,10 +568,10 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         proto_tree_add_item(mc_tree, hf_mc_data, tvb, offset, length, FALSE);
         switch (type) {
         case 0x01:
-            add_login_details(mc_tree, tvb, pinfo, offset);
+            add_login_details(mc_tree, tvb, pinfo, offset, c2s);
             break;
         case 0x02:
-            add_handshake_details(mc_tree, tvb, pinfo, offset);
+            add_handshake_details(mc_tree, tvb, pinfo, offset, c2s);
             break;
         case 0x03:
             add_chat_details(mc_tree, tvb, pinfo, offset);
