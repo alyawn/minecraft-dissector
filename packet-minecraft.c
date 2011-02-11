@@ -56,11 +56,13 @@ G_MODULE_EXPORT void plugin_reg_handoff(void) {
 
 static gint ett_mc = -1;
 static gint ett_mc_double_coords = -1;
+static gint ett_mc_int_coords = -1;
 
 /* Setup protocol subtree array */
 static gint *ett[] = {
     &ett_mc,
 	&ett_mc_double_coords,
+	&ett_mc_int_coords
 };
 
 #include "packet-minecraft-hfint.h"
@@ -78,12 +80,55 @@ void proto_reg_handoff_minecraft(void)
     }
 }
 
+static gint32 tvb_get_ntohint(tvbuff_t * tvb, guint offset, guint size)
+{
+    switch(size) {
+        case 1: return (gint32)tvb_get_guint8(tvb, offset); 
+        case 2: return (gint32)tvb_get_ntohs(tvb, offset); 
+        case 3: return (gint32)tvb_get_ntoh24(tvb, offset); 
+        case 4: return (gint32)tvb_get_ntohl(tvb, offset); 
+        /*case 5: return (gint32)tvb_get_ntoh40(tvb, offset); */
+        /*case 6: return (gint32)tvb_get_ntoh48(tvb, offset); */
+        /*case 7: return (gint32)tvb_get_ntoh56(tvb, offset); */
+        case 8: return (gint32)tvb_get_ntoh64(tvb, offset); 
+        default: break;
+    }
+    DISSECTOR_ASSERT(FALSE);
+    return 0;
+}
+
+static void proto_tree_add_item_varint(proto_tree *tree, gint hf_id_byte, gint hf_id_quad, tvbuff_t * tvb, guint32 offset, guint32 size)
+{
+    if(size == 1) {
+        proto_tree_add_item(tree, hf_id_byte, tvb, offset, 1, FALSE);
+    } else {
+        proto_tree_add_item(tree, hf_id_quad, tvb, offset, 4, FALSE);
+    }
+}
+
+static void add_int_coordinates( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, guint32 xoffset, guint x_size, guint32 yoffset, guint y_size, guint32 zoffset, guint z_size)
+{
+    proto_item *ti;
+    proto_tree * coord_tree;
+    gint32 x,y,z;
+
+    x = tvb_get_ntohint(tvb, offset+xoffset, x_size);
+    y = tvb_get_ntohint(tvb, offset+yoffset, y_size);
+    z = tvb_get_ntohint(tvb, offset+zoffset, z_size);
+
+    ti = proto_tree_add_none_format(tree, hf_mc_int_coords, tvb, offset, -1, "Coordinates: %d, %d, %d", (gint32)tvb_get_ntohl(tvb, offset+xoffset), y, (gint32)tvb_get_ntohl(tvb, offset+zoffset));
+    coord_tree = proto_item_add_subtree(ti, ett_mc_int_coords);
+
+    proto_tree_add_item_varint(coord_tree, hf_mc_xbyte, hf_mc_xint, tvb, offset+xoffset, 4);
+    proto_tree_add_item_varint(coord_tree, hf_mc_ybyte, hf_mc_yint, tvb, offset+yoffset, 4);
+    proto_tree_add_item_varint(coord_tree, hf_mc_zbyte, hf_mc_zint, tvb, offset+zoffset, 4);
+}
 
 static void add_double_coordinates( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, guint32 xoffset, guint32 yoffset, guint32 zoffset)
 {
     proto_item *ti;
     proto_tree * coord_tree;
-    ti = proto_tree_add_none_format(tree, hf_mc_coordinates, tvb, offset, -1, "Coordinates: %f, %f, %f", tvb_get_ntohieee_double(tvb, offset+xoffset), tvb_get_ntohieee_double(tvb, offset+yoffset), tvb_get_ntohieee_double(tvb, offset+zoffset));
+    ti = proto_tree_add_none_format(tree, hf_mc_double_coords, tvb, offset, -1, "Coordinates: %f, %f, %f", tvb_get_ntohieee_double(tvb, offset+xoffset), tvb_get_ntohieee_double(tvb, offset+yoffset), tvb_get_ntohieee_double(tvb, offset+zoffset));
     coord_tree = proto_item_add_subtree(ti, ett_mc_double_coords);
     proto_tree_add_item(coord_tree, hf_mc_x, tvb, offset + xoffset, 8, FALSE);
     proto_tree_add_item(coord_tree, hf_mc_y, tvb, offset + yoffset, 8, FALSE);
@@ -259,9 +304,7 @@ static void add_block_change_details( proto_tree *tree, tvbuff_t *tvb, packet_in
 }
 static void add_spawn_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
-    proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 1, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_yint, tvb, offset + 5, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 9, 4, FALSE);
+    add_int_coordinates(tree, tvb, pinfo, offset, 1, 4, 5, 4, 9, 4);
 }
 
 static void add_complex_entity_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)

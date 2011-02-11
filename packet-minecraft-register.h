@@ -39,7 +39,7 @@ void proto_register_minecraft(void)
             { &hf_mc_loaded,
               {"Loaded", "mc.loaded", FT_BOOLEAN, BASE_DEC, NULL, 0x0, "Loaded", HFILL }
             },
-            { &hf_mc_coordinates,
+            { &hf_mc_double_coords,
               {"Coordinates", "mc.coords", FT_NONE, BASE_NONE, NULL, 0x0, "Coordinates", HFILL }
             },
             { &hf_mc_x,
@@ -83,6 +83,9 @@ void proto_register_minecraft(void)
             },
             { &hf_mc_direction,
               {"Direction", "mc.direction", FT_INT8, BASE_DEC, VALS(directionnames), 0x0, "Direction", HFILL }
+            },
+            { &hf_mc_int_coords,
+              {"Coordinates", "mc.coords", FT_NONE, BASE_NONE, NULL, 0x0, "Coordinates", HFILL }
             },
             { &hf_mc_xint,
               {"X", "mc.xint", FT_INT32, BASE_DEC, NULL, 0x0, "X Coord", HFILL }
