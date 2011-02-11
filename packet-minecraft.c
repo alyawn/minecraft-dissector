@@ -546,7 +546,18 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x15: len = 23; break;
     case 0x16: len = 9; break;
     case 0x17: len = 18; break;
-    case 0x18: len = 20; break;
+    case 0x18:
+        if(available < 21) { return -1; }
+        /* Find termination byte 0x7f */
+        for(len = 21;
+            (len <= available) && (tvb_get_guint8(tvb, offset+len-1) != 0x7f);
+            len++) { }
+        if(len > available){
+            /* TODO OPTIMIZATION: Cache len so we can start where we left off, 
+               instead of starting from scratch each time */
+            return -1;
+        }
+        return len;
     case 0x1C: len = 11; break;
     case 0x1D: len = 5; break;
     case 0x1E: len = 5; break;
