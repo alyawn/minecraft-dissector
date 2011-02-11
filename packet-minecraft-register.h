@@ -10,7 +10,7 @@ void proto_register_minecraft(void)
                 {"Data", "mc.data", FT_NONE, BASE_NONE, NULL, 0x0, "Packet Data", HFILL}
             },
             { &hf_mc_type,
-              { "Type", "mc.type", FT_UINT8, BASE_DEC, VALS(packettypenames), 0x0, "Packet Type", HFILL }
+              { "Type", "mc.type", FT_UINT8, BASE_HEX, VALS(packettypenames), 0x0, "Packet Type", HFILL }
             },
             { &hf_mc_server_name,
               {"Server Name", "mc.server_name", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
