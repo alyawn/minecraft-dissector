@@ -39,6 +39,9 @@ void proto_register_minecraft(void)
             { &hf_mc_loaded,
               {"Loaded", "mc.loaded", FT_BOOLEAN, BASE_DEC, NULL, 0x0, "Loaded", HFILL }
             },
+            { &hf_mc_coordinates,
+              {"Coordinates", "mc.coords", FT_NONE, BASE_NONE, NULL, 0x0, "Coordinates", HFILL }
+            },
             { &hf_mc_x,
               {"X", "mc.x", FT_DOUBLE, BASE_DEC, NULL, 0x0, "X Coord", HFILL }
             },

@@ -54,11 +54,13 @@ G_MODULE_EXPORT void plugin_reg_handoff(void) {
 }
 #endif
 
-static int ett_mc = -1;
+static gint ett_mc = -1;
+static gint ett_mc_double_coords = -1;
 
 /* Setup protocol subtree array */
-static int *ett[] = {
-    &ett_mc
+static gint *ett[] = {
+    &ett_mc,
+	&ett_mc_double_coords,
 };
 
 #include "packet-minecraft-hfint.h"
@@ -75,6 +77,19 @@ void proto_reg_handoff_minecraft(void)
         dissector_add("tcp.port", 25565, minecraft_handle);
     }
 }
+
+
+static void add_double_coordinates( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, guint32 xoffset, guint32 yoffset, guint32 zoffset)
+{
+    proto_item *ti;
+    proto_tree * coord_tree;
+    ti = proto_tree_add_none_format(tree, hf_mc_coordinates, tvb, offset, -1, "Coordinates: %f, %f, %f", tvb_get_ntohieee_double(tvb, offset+xoffset), tvb_get_ntohieee_double(tvb, offset+yoffset), tvb_get_ntohieee_double(tvb, offset+zoffset));
+    coord_tree = proto_item_add_subtree(ti, ett_mc_double_coords);
+    proto_tree_add_item(coord_tree, hf_mc_x, tvb, offset + xoffset, 8, FALSE);
+    proto_tree_add_item(coord_tree, hf_mc_y, tvb, offset + yoffset, 8, FALSE);
+    proto_tree_add_item(coord_tree, hf_mc_z, tvb, offset + zoffset, 8, FALSE);
+}
+
 
 static void add_login_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
 {
@@ -129,18 +144,8 @@ static void add_loaded_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pi
 }
 static void add_player_position_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
-
-    /*
-    gdouble x,y,z,s;
-    x = tvb_get_gdouble(tvb, offset + 1);
-    y = tvb_get_gdouble(tvb, offset + 9);
-    s = tvb_get_gdouble(tvb, offset + 17);
-    z = tvb_get_gdouble(tvb, offset + 25);
-      */
-    proto_tree_add_item(tree, hf_mc_x, tvb, offset + 1, 8, FALSE);
-    proto_tree_add_item(tree, hf_mc_y, tvb, offset + 9, 8, FALSE);
+    add_double_coordinates(tree, tvb, pinfo, offset, 1, 9, 25);
     proto_tree_add_item(tree, hf_mc_stance, tvb, offset + 17, 8, FALSE);
-    proto_tree_add_item(tree, hf_mc_z, tvb, offset + 25, 8, FALSE);
 
 }
 static void add_player_look_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
@@ -152,10 +157,8 @@ static void add_player_look_details( proto_tree *tree, tvbuff_t *tvb, packet_inf
 }
 static void add_player_move_look_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
-    proto_tree_add_item(tree, hf_mc_x, tvb, offset + 1, 8, FALSE);
-    proto_tree_add_item(tree, hf_mc_y, tvb, offset + 9, 8, FALSE);
+    add_double_coordinates(tree, tvb, pinfo, offset, 1, 9, 25);
     proto_tree_add_item(tree, hf_mc_stance, tvb, offset + 17, 8, FALSE);
-    proto_tree_add_item(tree, hf_mc_z, tvb, offset + 25, 8, FALSE);
 
     proto_tree_add_item(tree, hf_mc_rotation, tvb, offset + 33, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_pitch, tvb, offset + 37, 4, FALSE);
