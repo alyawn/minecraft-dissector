@@ -69,7 +69,7 @@ void proto_reg_handoff_minecraft(void)
 {
     static int Initialized=FALSE;
 
-    /* register with wireshark to dissect udp packets on port 3001 */
+    /* register with wireshark to dissect udp packets on port 25565 */
     if (!Initialized) {
         minecraft_handle = create_dissector_handle(dissect_minecraft, proto_minecraft);
         dissector_add("tcp.port", 25565, minecraft_handle);
