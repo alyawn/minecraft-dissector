@@ -423,7 +423,7 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
     }
 }
 
-guint get_minecraft_packet_len(guint8 type,guint offset, guint available, tvbuff_t *tvb) {
+guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuff_t *tvb) {
     guint len=-1;
     switch (type) {
     case 0x00: len = 1; break;
@@ -542,7 +542,7 @@ void dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     while (offset < tvb_reported_length(tvb)) {
         packet = tvb_get_guint8(tvb, offset);
         gint available = tvb_reported_length_remaining(tvb, offset);
-        gint len = get_minecraft_packet_len(packet, offset, available, tvb);
+        gint len = get_minecraft_message_len(packet, offset, available, tvb);
         if (len == -1 || len > available) {
             pinfo->desegment_offset = offset;
             if ( len == -1 ) {
