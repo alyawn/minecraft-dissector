@@ -47,3 +47,4 @@ static gint hf_mc_login_password = -1;
 static gint hf_mc_login_map_seed = -1;
 static gint hf_mc_login_dimension = -1;
 static gint hf_mc_login_entity_id = -1;
+static gint hf_mc_inventory_slot = -1;

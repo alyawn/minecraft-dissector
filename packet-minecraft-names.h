@@ -14,7 +14,8 @@ static const value_string packettypenames[] = {
     { 0x0D, "Player Move + Look" },
     { 0x0E, "Block Dig" },
     { 0x0F, "Place" },
-    { 0x10, "Block/Item Switch" },
+    /*{ 0x10, "Block/Item Switch" },*/ /* ??? */
+    { 0x10, "Change slot selection" },
     { 0x11, "Add to Inventory" },
     { 0x12, "Arm Animation" },
     { 0x14, "Named Entity Spawn" },

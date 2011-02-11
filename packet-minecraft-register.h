@@ -138,6 +138,7 @@ void proto_register_minecraft(void)
             { &hf_mc_login_password, {"password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },
             { &hf_mc_login_dimension, {"Dimension", "mc.dimension", FT_INT8, BASE_DEC, NULL, 0x0, "Dimension", HFILL } },
+            { &hf_mc_inventory_slot, {"Inventory slot", "mc.invslot", FT_INT16, BASE_DEC, NULL, 0x0, "Inventory slot", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
                               "Minecraft Beta v9 SMP Protocol", /* name */

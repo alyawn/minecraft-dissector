@@ -227,11 +227,19 @@ static void add_place_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pin
     proto_tree_add_item(tree, hf_mc_direction, tvb, offset + 12, 1, FALSE);
 
 }
+/* TODO DEAD?
 static void add_block_item_switch_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
     proto_tree_add_item(tree, hf_mc_unique_id, tvb, offset + 1, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_item_code, tvb, offset + 5, 2, FALSE);
 }
+*/
+
+static void add_change_slot_selection( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
+{
+    proto_tree_add_item(tree, hf_mc_inventory_slot, tvb, offset + 1, 2, FALSE);
+}
+
 static void add_add_to_inventory_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
     proto_tree_add_item(tree, hf_mc_block_type, tvb, offset + 1, 2, FALSE);
@@ -420,7 +428,7 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
             add_place_details(mc_tree, tvb, pinfo, offset);
             break;
         case 0x10:
-            add_block_item_switch_details(mc_tree, tvb, pinfo, offset);
+            add_change_slot_selection(mc_tree, tvb, pinfo, offset, c2s);
             break;
         case 0x11:
             add_add_to_inventory_details(mc_tree, tvb, pinfo, offset);
@@ -532,7 +540,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x0D: len = 42; break;
     case 0x0E: len = 12; break;
     case 0x0F: len = 13; break;
-    case 0x10: len = 7; break;
+    case 0x10: len = 3; break;
     case 0x11: len = 6; break;
     case 0x12: len = 6; break;
     case 0x15: len = 23; break;
