@@ -254,11 +254,10 @@ static void add_block_dig_details( proto_tree *tree, tvbuff_t *tvb, packet_info 
 }
 static void add_place_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
+    add_int_coordinates(tree, tvb, pinfo, offset, 1, 4, 5, 1, 6, 4);
+    proto_tree_add_item(tree, hf_mc_direction, tvb, offset + 10, 1, FALSE);
     proto_tree_add_item(tree, hf_mc_block_type, tvb, offset + 1, 2, FALSE);
-    proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 3, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_ybyte, tvb, offset + 7, 1, FALSE);
-    proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 8, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_direction, tvb, offset + 12, 1, FALSE);
+	/* TODO: if block_type >= 0, then more fields */
 
 }
 /* TODO DEAD?
@@ -576,7 +575,10 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x0C: return 10;
     case 0x0D: return 42;
     case 0x0E: return 12;
-    case 0x0F: return 13;
+    case 0x0F: 
+		if(available < 13) { return -1; }
+		if(((gint16)tvb_get_ntohs(tvb, offset+11)) < 0) { return 13; }
+		return 16;
     case 0x10: return 3;
     case 0x11: return 6;
     case 0x12: return 6;
@@ -635,6 +637,12 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         if(available < 5) { return -1; }
         return 6 + tvb_get_ntohs(tvb, offset + 3);
     case 0x65: return 2;
+	case 0x66:
+		if(available < 9) { return -1; }
+		len = 9;
+        if( ((gint16)tvb_get_ntohs(tvb, offset + 7)) != -1) { len += 3; }
+		return len;
+		break;
     case 0x67:
         len = 6;
         if(available < 6) { return -1; }
