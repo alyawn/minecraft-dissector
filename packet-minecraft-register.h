@@ -136,7 +136,7 @@ void proto_register_minecraft(void)
               {"Life", "mc.life", FT_INT16, BASE_DEC, NULL, 0x0, "Life", HFILL }
             },
             { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
-            { &hf_mc_login_entity_id, {"Player entity ID", "mc.playerid", FT_INT32, BASE_DEC, NULL, 0x0, "Player entity ID", HFILL } },
+            { &hf_mc_entity_id, {"Entity ID", "mc.entityid", FT_INT32, BASE_DEC, NULL, 0x0, "Entity ID", HFILL } },
             { &hf_mc_login_username, {"username", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_password, {"password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },
@@ -144,6 +144,7 @@ void proto_register_minecraft(void)
             { &hf_mc_inventory_slot, {"Inventory slot", "mc.invslot", FT_INT16, BASE_DEC, NULL, 0x0, "Inventory slot", HFILL } },
             { &hf_mc_count, {"Count", "mc.count", FT_INT8, BASE_DEC, NULL, 0x0, "Count", HFILL } },
             { &hf_mc_damage, {"Damage", "mc.damage", FT_INT16, BASE_DEC, NULL, 0x0, "Damage", HFILL } },
+            { &hf_mc_animation, {"Animation", "mc.animation", FT_INT8, BASE_DEC, VALS(animations), 0x0, "Animation", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
                               "Minecraft Beta v9 SMP Protocol", /* name */

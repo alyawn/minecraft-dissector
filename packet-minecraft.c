@@ -40,6 +40,14 @@ static const value_string directionnames[] = {
     {0, NULL}
 };
 
+static const value_string animations[] = {
+	{0, "None"},
+	{1, "Swing arm"},
+	{2, "Take damage"},
+	{104, "Crouch"},
+	{105, "Stand"},
+};
+
 #ifndef ENABLE_STATIC
 G_MODULE_EXPORT void plugin_register(void)
 {
@@ -168,7 +176,7 @@ static void add_login_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pin
 
     offset += 1;
 
-    proto_tree_add_item(tree, c2s?hf_mc_login_protocol_version:hf_mc_login_entity_id, tvb, offset, 4, FALSE);
+    proto_tree_add_item(tree, c2s?hf_mc_login_protocol_version:hf_mc_entity_id, tvb, offset, 4, FALSE);
     offset += 4;
 
     strlen1 = tvb_get_ntohs( tvb, offset );
@@ -272,10 +280,10 @@ static void add_add_to_inventory_details( proto_tree *tree, tvbuff_t *tvb, packe
     proto_tree_add_item(tree, hf_mc_amount, tvb, offset + 3, 1, FALSE);
     proto_tree_add_item(tree, hf_mc_life, tvb, offset + 4, 2, FALSE);
 }
-static void add_arm_animation_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+static void add_animation_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
-    proto_tree_add_item(tree, hf_mc_unique_id, tvb, offset + 1, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_unknown_byte, tvb, offset + 5, 1, FALSE);
+    proto_tree_add_item(tree, hf_mc_entity_id, tvb, offset + 1, 4, FALSE);
+    proto_tree_add_item(tree, hf_mc_animation, tvb, offset + 5, 1, FALSE);
 }
 static void add_named_entity_spawn_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
@@ -463,7 +471,7 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
             add_add_to_inventory_details(mc_tree, tvb, pinfo, offset);
             break;
         case 0x12:
-            add_arm_animation_details(mc_tree, tvb, pinfo, offset);
+            add_animation_details(mc_tree, tvb, pinfo, offset);
             break;
         case 0x14:
             add_named_entity_spawn_details(mc_tree, tvb, pinfo, offset);
