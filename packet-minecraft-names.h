@@ -20,7 +20,7 @@ static const value_string packettypenames[] = {
     { 0x11, "Add to Inventory" },
     { 0x12, "Arm Animation" },
     { 0x14, "Named Entity Spawn" },
-    { 0x15, "Entity Spawn" },
+    { 0x15, "Pickup Spawn" },
     { 0x16, "Collect Item" },
     { 0x17, "Add Object or Vehicle" },
     { 0x18, "Mob Spawn" },

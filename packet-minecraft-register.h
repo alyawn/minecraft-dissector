@@ -108,6 +108,9 @@ void proto_register_minecraft(void)
             { &hf_mc_pitch_byte,
               {"Pitch", "mc.pitch_byte", FT_INT8, BASE_DEC, NULL, 0x0, "Pitch Byte", HFILL }
             },
+            { &hf_mc_roll_byte,
+              {"Roll", "mc.pitch_roll", FT_INT8, BASE_DEC, NULL, 0x0, "Roll Byte", HFILL }
+            },
             { &hf_mc_size_x,
               {"Size X", "mc.size_x", FT_INT8, BASE_DEC, NULL, 0x0, "X Size", HFILL }
             },
@@ -139,6 +142,8 @@ void proto_register_minecraft(void)
             { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },
             { &hf_mc_login_dimension, {"Dimension", "mc.dimension", FT_INT8, BASE_DEC, NULL, 0x0, "Dimension", HFILL } },
             { &hf_mc_inventory_slot, {"Inventory slot", "mc.invslot", FT_INT16, BASE_DEC, NULL, 0x0, "Inventory slot", HFILL } },
+            { &hf_mc_count, {"Count", "mc.count", FT_INT8, BASE_DEC, NULL, 0x0, "Count", HFILL } },
+            { &hf_mc_damage, {"Damage", "mc.damage", FT_INT16, BASE_DEC, NULL, 0x0, "Damage", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
                               "Minecraft Beta v9 SMP Protocol", /* name */
