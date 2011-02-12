@@ -585,6 +585,25 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
             len = 13 + tvb_get_ntohs(tvb, offset + 11);
         }
         break;
+	case 0x68:
+	{
+		gint n;
+		gint num_items;
+		gint16 item_id;
+		len = 4;
+		if(available < len) { return -1; }
+		num_items = tvb_get_ntohs(tvb, offset + 2);
+
+		for(n = 0; n < num_items; n++) {
+			if((len+1) > available) { return -1; }
+			item_id = tvb_get_ntohs(tvb, offset + len);
+			len += 2;
+			if(item_id != -1) {
+				len += 3;
+			}
+		}
+		break;
+	}
     case 0xff:
         if ( available >= 3 ) {
             len = 3 + tvb_get_ntohs(tvb, offset + 1);
