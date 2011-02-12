@@ -61,8 +61,8 @@ static gint ett_mc_int_coords = -1;
 /* Setup protocol subtree array */
 static gint *ett[] = {
     &ett_mc,
-	&ett_mc_double_coords,
-	&ett_mc_int_coords
+    &ett_mc_double_coords,
+    &ett_mc_int_coords
 };
 
 #include "packet-minecraft-hfint.h"
@@ -82,28 +82,28 @@ void proto_reg_handoff_minecraft(void)
 
 static guint metadata_len(tvbuff_t * tvb, guint offset, guint available)
 {
-	guint len;
-	len = 0;
-	while(1) {
-		guint8 x;
-		if( (offset+len+1) > available ) { return -1; }
-		len += 1;
-		x = tvb_get_guint8(tvb, offset + len - 1);
-		if(x == 127) { return len; }
-		switch(x >> 5) {
-			case 0:  len += 1; break; /* int8 */
-			case 1:  len += 2; break; /* int16 */
-			case 2:  len += 4; break; /* int32 */
-			case 3:  len += 4; break; /* float32 */
-			case 4:                   /* string */
-				if( (offset+len+2) > available ) { return -1; }
-				len += 2 + tvb_get_ntohs(tvb, offset+len);
-				break;
-			case 5:  len += 5; break; /* int16, int8, int16 */
-			default: len += 4; break; /* TODO: Eeeee! */
-		}
-	}
-	DISSECTOR_ASSERT(0); /* Loop should never exit */ 
+    guint len;
+    len = 0;
+    while(1) {
+        guint8 x;
+        if( (offset+len+1) > available ) { return -1; }
+        len += 1;
+        x = tvb_get_guint8(tvb, offset + len - 1);
+        if(x == 127) { return len; }
+        switch(x >> 5) {
+            case 0:  len += 1; break; /* int8 */
+            case 1:  len += 2; break; /* int16 */
+            case 2:  len += 4; break; /* int32 */
+            case 3:  len += 4; break; /* float32 */
+            case 4:                   /* string */
+                if( (offset+len+2) > available ) { return -1; }
+                len += 2 + tvb_get_ntohs(tvb, offset+len);
+                break;
+            case 5:  len += 5; break; /* int16, int8, int16 */
+            default: len += 4; break; /* TODO: Eeeee! */
+        }
+    }
+    DISSECTOR_ASSERT(0); /* Loop should never exit */ 
 }
 
 static gint32 tvb_get_ntohint(tvbuff_t * tvb, guint offset, guint size)
@@ -301,7 +301,7 @@ static void add_pickup_spawn_details( proto_tree *tree, tvbuff_t *tvb, packet_in
     proto_tree_add_item(tree, hf_mc_unique_id, tvb, offset + 1, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_block_type, tvb, offset + 5, 2, FALSE);
     proto_tree_add_item(tree, hf_mc_unknown_byte, tvb, offset + 7, 1, FALSE); /* TODO: Count */
-	/*TODO proto_tree_add_item(tree, hf_mc_damage, tvb, offset + 8, 1, FALSE); */
+    /*TODO proto_tree_add_item(tree, hf_mc_damage, tvb, offset + 8, 1, FALSE); */
     proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 10, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_yint, tvb, offset + 14, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 18, 4, FALSE);
@@ -586,9 +586,9 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         }
         return len;
     case 0x19: 
-		if(available < 23) { return -1; }
-		return 23 + tvb_get_ntohs(tvb, offset+5);
-		break;
+        if(available < 23) { return -1; }
+        return 23 + tvb_get_ntohs(tvb, offset+5);
+        break;
     case 0x1C: return 11;
     case 0x1D: return 5;
     case 0x1E: return 5;
@@ -597,7 +597,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x21: return 10;
     case 0x22: return 19;
     case 0x27: return 9;
-	case 0x28: return 5 + metadata_len(tvb, offset + 5, available);
+    case 0x28: return 5 + metadata_len(tvb, offset + 5, available);
     case 0x32: return 10;
     case 0x33:
         if ( available >= 18 ) {
@@ -618,39 +618,39 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
             len = 13 + tvb_get_ntohs(tvb, offset + 11);
         }
         break;
-	case 0x3c:
-		if(available < 33) { return -1; }
-		return 33 + (3 * tvb_get_ntohl(tvb, offset + 33));
-	case 0x64:
-		if(available < 5) { return -1; }
-		return 6 + tvb_get_ntohs(tvb, offset + 3);
-	case 0x65: return 2;
-	case 0x67:
-		len = 6;
-		if(available < 6) { return -1; }
-		if( ((gint16)tvb_get_ntohs(tvb, offset + 4)) != -1) { len += 3; }
-		break;
-	case 0x68:
-	{
-		gint n;
-		gint num_items;
-		gint16 item_id;
-		len = 4;
-		if(available < len) { return -1; }
-		num_items = tvb_get_ntohs(tvb, offset + 2);
+    case 0x3c:
+        if(available < 33) { return -1; }
+        return 33 + (3 * tvb_get_ntohl(tvb, offset + 33));
+    case 0x64:
+        if(available < 5) { return -1; }
+        return 6 + tvb_get_ntohs(tvb, offset + 3);
+    case 0x65: return 2;
+    case 0x67:
+        len = 6;
+        if(available < 6) { return -1; }
+        if( ((gint16)tvb_get_ntohs(tvb, offset + 4)) != -1) { len += 3; }
+        break;
+    case 0x68:
+    {
+        gint n;
+        gint num_items;
+        gint16 item_id;
+        len = 4;
+        if(available < len) { return -1; }
+        num_items = tvb_get_ntohs(tvb, offset + 2);
 
-		for(n = 0; n < num_items; n++) {
-			if((len+2) > available) { return -1; }
-			item_id = tvb_get_ntohs(tvb, offset + len);
-			len += 2;
-			if(item_id != -1) {
-				len += 3;
-			}
-		}
-		break;
-	}
-	case 0x69: return 6;
-	case 0x6A: return 5;
+        for(n = 0; n < num_items; n++) {
+            if((len+2) > available) { return -1; }
+            item_id = tvb_get_ntohs(tvb, offset + len);
+            len += 2;
+            if(item_id != -1) {
+                len += 3;
+            }
+        }
+        break;
+    }
+    case 0x69: return 6;
+    case 0x6A: return 5;
     case 0xff:
         if ( available >= 3 ) {
             len = 3 + tvb_get_ntohs(tvb, offset + 1);

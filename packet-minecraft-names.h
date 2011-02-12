@@ -40,7 +40,7 @@ static const value_string packettypenames[] = {
     { 0x35, "Block Change" },
     { 0x36, "Play Note Block" },
     { 0x3b, "Complex Entity"},
-	{ 0x3c, "Explosion" },
+    { 0x3c, "Explosion" },
     { 0x64, "Window Close"},
     { 0x65, "Window Close"},
     { 0x67, "Set Slot"},
