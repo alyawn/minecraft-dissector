@@ -300,14 +300,15 @@ static void add_pickup_spawn_details( proto_tree *tree, tvbuff_t *tvb, packet_in
 
     proto_tree_add_item(tree, hf_mc_unique_id, tvb, offset + 1, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_block_type, tvb, offset + 5, 2, FALSE);
-    proto_tree_add_item(tree, hf_mc_unknown_byte, tvb, offset + 7, 1, FALSE);
-    proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 8, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_yint, tvb, offset + 12, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 16, 4, FALSE);
+    proto_tree_add_item(tree, hf_mc_unknown_byte, tvb, offset + 7, 1, FALSE); /* TODO: Count */
+	/*TODO proto_tree_add_item(tree, hf_mc_damage, tvb, offset + 8, 1, FALSE); */
+    proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 10, 4, FALSE);
+    proto_tree_add_item(tree, hf_mc_yint, tvb, offset + 14, 4, FALSE);
+    proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 18, 4, FALSE);
 
-    proto_tree_add_item(tree, hf_mc_rotation_byte, tvb, offset + 20, 1, FALSE);
-    proto_tree_add_item(tree, hf_mc_pitch_byte, tvb, offset + 21, 1, FALSE);
-    proto_tree_add_item(tree, hf_mc_unknown_byte, tvb, offset + 22, 1, FALSE);
+    proto_tree_add_item(tree, hf_mc_rotation_byte, tvb, offset + 22, 1, FALSE);
+    proto_tree_add_item(tree, hf_mc_pitch_byte, tvb, offset + 23, 1, FALSE);
+    proto_tree_add_item(tree, hf_mc_unknown_byte, tvb, offset + 24, 1, FALSE);
 }
 static void add_pre_chunk_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
@@ -569,7 +570,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x10: return 3;
     case 0x11: return 6;
     case 0x12: return 6;
-    case 0x15: return 23;
+    case 0x15: return 25;
     case 0x16: return 9;
     case 0x17: return 18;
     case 0x18:
