@@ -80,6 +80,32 @@ void proto_reg_handoff_minecraft(void)
     }
 }
 
+static guint metadata_len(tvbuff_t * tvb, guint offset, guint available)
+{
+	guint len;
+	len = 0;
+	while(1) {
+		guint8 x;
+		if( (offset+len+1) > available ) { return -1; }
+		len += 1;
+		x = tvb_get_guint8(tvb, offset + len - 1);
+		if(x == 127) { return len; }
+		switch(x >> 5) {
+			case 0:  len += 1; break; /* int8 */
+			case 1:  len += 2; break; /* int16 */
+			case 2:  len += 4; break; /* int32 */
+			case 3:  len += 4; break; /* float32 */
+			case 4:                   /* string */
+				if( (offset+len+2) > available ) { return -1; }
+				len += 2 + tvb_get_ntohs(tvb, offset+len);
+				break;
+			case 5:  len += 5; break; /* int16, int8, int16 */
+			default: len += 4; break; /* TODO: Eeeee! */
+		}
+	}
+	DISSECTOR_ASSERT(0); /* Loop should never exit */ 
+}
+
 static gint32 tvb_get_ntohint(tvbuff_t * tvb, guint offset, guint size)
 {
     switch(size) {
@@ -480,7 +506,7 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
 guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuff_t *tvb) {
     guint len=-1;
     switch (type) {
-    case 0x00: len = 1; break;
+    case 0x00: return 1;
     case 0x01:
     {
         int len_strA, len_strB;
@@ -503,7 +529,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
             len = 3 + tvb_get_ntohs(tvb, offset + 1);
         }
         break;
-    case 0x04: len = 9; break;
+    case 0x04: return 9;
     case 0x05:
     {
         if ( available >= 7 ) {
@@ -531,21 +557,21 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         }
     }
     break;
-    case 0x06: len = 13; break;
-    case 0x0A: len = 2; break;
-    case 0x0B: len = 34; break;
-    case 0x07: len = 9; break;
-    case 0x08: len = 3; break;
-    case 0x0C: len = 10; break;
-    case 0x0D: len = 42; break;
-    case 0x0E: len = 12; break;
-    case 0x0F: len = 13; break;
-    case 0x10: len = 3; break;
-    case 0x11: len = 6; break;
-    case 0x12: len = 6; break;
-    case 0x15: len = 23; break;
-    case 0x16: len = 9; break;
-    case 0x17: len = 18; break;
+    case 0x06: return 13;
+    case 0x0A: return 2;
+    case 0x0B: return 34;
+    case 0x07: return 9;
+    case 0x08: return 3;
+    case 0x0C: return 10;
+    case 0x0D: return 42;
+    case 0x0E: return 12;
+    case 0x0F: return 13;
+    case 0x10: return 3;
+    case 0x11: return 6;
+    case 0x12: return 6;
+    case 0x15: return 23;
+    case 0x16: return 9;
+    case 0x17: return 18;
     case 0x18:
         if(available < 21) { return -1; }
         /* Find termination byte 0x7f */
@@ -558,15 +584,20 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
             return -1;
         }
         return len;
-    case 0x1C: len = 11; break;
-    case 0x1D: len = 5; break;
-    case 0x1E: len = 5; break;
-    case 0x1F: len = 8; break;
-    case 0x20: len = 7; break;
-    case 0x21: len = 10; break;
-    case 0x22: len = 19; break;
-    case 0x27: len = 9; break;
-    case 0x32: len = 10; break;
+    case 0x19: 
+		if(available < 23) { return -1; }
+		return 23 + tvb_get_ntohs(tvb, offset+5);
+		break;
+    case 0x1C: return 11;
+    case 0x1D: return 5;
+    case 0x1E: return 5;
+    case 0x1F: return 8;
+    case 0x20: return 7;
+    case 0x21: return 10;
+    case 0x22: return 19;
+    case 0x27: return 9;
+	case 0x28: return 5 + metadata_len(tvb, offset + 5, available);
+    case 0x32: return 10;
     case 0x33:
         if ( available >= 18 ) {
             len = 18 + tvb_get_ntohl(tvb, offset + 14);
@@ -579,12 +610,20 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
             len = 11 + (4 * tvb_get_ntohs(tvb, offset + 9));
         }
         break;
-    case 0x35: len = 12; break;
+    case 0x35: return 12;
+    case 0x36: return 13;
     case 0x3b:
         if ( available >= 13 ) {
             len = 13 + tvb_get_ntohs(tvb, offset + 11);
         }
         break;
+	case 0x3c:
+		if(available < 33) { return -1; }
+		return 33 + (3 * tvb_get_ntohl(tvb, offset + 33));
+	case 0x64:
+		if(available < 5) { return -1; }
+		return 6 + tvb_get_ntohs(tvb, offset + 3);
+	case 0x65: return 2;
 	case 0x67:
 		len = 6;
 		if(available < 6) { return -1; }
@@ -609,6 +648,8 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
 		}
 		break;
 	}
+	case 0x69: return 6;
+	case 0x6A: return 5;
     case 0xff:
         if ( available >= 3 ) {
             len = 3 + tvb_get_ntohs(tvb, offset + 1);
