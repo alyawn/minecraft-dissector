@@ -36,6 +36,7 @@ static const value_string packettypenames[] = {
     { 0x34, "Multi Block Change" },
     { 0x35, "Block Change" },
     { 0x3b, "Complex Entity"},
+    { 0x67, "Set Slot"},
     { 0x68, "Window Items"},
     { 0xFF, "Kick" },
     { 0, NULL }

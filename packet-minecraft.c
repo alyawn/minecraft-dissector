@@ -585,6 +585,11 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
             len = 13 + tvb_get_ntohs(tvb, offset + 11);
         }
         break;
+	case 0x67:
+		len = 6;
+		if(available < 6) { return -1; }
+		if( ((gint16)tvb_get_ntohs(tvb, offset + 4)) != -1) { len += 3; }
+		break;
 	case 0x68:
 	{
 		gint n;
@@ -595,7 +600,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
 		num_items = tvb_get_ntohs(tvb, offset + 2);
 
 		for(n = 0; n < num_items; n++) {
-			if((len+1) > available) { return -1; }
+			if((len+2) > available) { return -1; }
 			item_id = tvb_get_ntohs(tvb, offset + len);
 			len += 2;
 			if(item_id != -1) {
