@@ -1,3 +1,9 @@
+This is a WireShark dissector to decode the Minecraft protocol.  It is incomplete but useful.
+
+Home page: http://file///home/chaos/public_html/alan/games/video/minecraft/minecraft-dissector.html
+
+
+
 run Make in the directory
 
 it expects /usr/include/wireshark to exist, on ubuntu aptitude install wireshark-dev
