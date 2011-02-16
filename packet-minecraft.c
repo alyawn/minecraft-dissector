@@ -41,11 +41,11 @@ static const value_string directionnames[] = {
 };
 
 static const value_string animations[] = {
-	{0, "None"},
-	{1, "Swing arm"},
-	{2, "Take damage"},
-	{104, "Crouch"},
-	{105, "Stand"},
+    {0, "None"},
+    {1, "Swing arm"},
+    {2, "Take damage"},
+    {104, "Crouch"},
+    {105, "Stand"},
 };
 
 #ifndef ENABLE_STATIC
@@ -257,7 +257,7 @@ static void add_place_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pin
     add_int_coordinates(tree, tvb, pinfo, offset, 1, 4, 5, 1, 6, 4);
     proto_tree_add_item(tree, hf_mc_direction, tvb, offset + 10, 1, FALSE);
     proto_tree_add_item(tree, hf_mc_block_type, tvb, offset + 1, 2, FALSE);
-	/* TODO: if block_type >= 0, then more fields */
+    /* TODO: if block_type >= 0, then more fields */
 
 }
 /* TODO DEAD?
@@ -323,7 +323,7 @@ static void add_pre_chunk_details( proto_tree *tree, tvbuff_t *tvb, packet_info 
 {
     proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 1, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 5, 4, FALSE);
-    proto_tree_add_item(tree, hf_mc_ybyte, tvb, offset + 9, 1, FALSE);
+    proto_tree_add_item(tree, hf_mc_ybyte, tvb, offset + 9, 1, FALSE); /* TODO: This is actually mode, not Y */
 }
 static void add_map_chunk_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
@@ -426,7 +426,7 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
     if ( tree ) {
         mc_item = proto_tree_add_item(tree, proto_minecraft, tvb, offset, length, FALSE);
         mc_tree = proto_item_add_subtree(mc_item, ett_mc);
-
+        proto_tree_add_text(mc_tree, tvb, offset, length, "%s", c2s?"C->S":"S->C");
         proto_tree_add_item(mc_tree, hf_mc_type, tvb, offset, 1, FALSE);
         proto_tree_add_item(mc_tree, hf_mc_data, tvb, offset, length, FALSE);
         switch (type) {
@@ -576,9 +576,9 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x0D: return 42;
     case 0x0E: return 12;
     case 0x0F: 
-		if(available < 13) { return -1; }
-		if(((gint16)tvb_get_ntohs(tvb, offset+11)) < 0) { return 13; }
-		return 16;
+        if(available < 13) { return -1; }
+        if(((gint16)tvb_get_ntohs(tvb, offset+11)) < 0) { return 13; }
+        return 16;
     case 0x10: return 3;
     case 0x11: return 6;
     case 0x12: return 6;
@@ -637,12 +637,12 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         if(available < 5) { return -1; }
         return 6 + tvb_get_ntohs(tvb, offset + 3);
     case 0x65: return 2;
-	case 0x66:
-		if(available < 9) { return -1; }
-		len = 9;
+    case 0x66:
+        if(available < 9) { return -1; }
+        len = 9;
         if( ((gint16)tvb_get_ntohs(tvb, offset + 7)) != -1) { len += 3; }
-		return len;
-		break;
+        return len;
+        break;
     case 0x67:
         len = 6;
         if(available < 6) { return -1; }
@@ -692,6 +692,7 @@ void dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
         packet = tvb_get_guint8(tvb, offset);
         gint available = tvb_reported_length_remaining(tvb, offset);
         gint len = get_minecraft_message_len(packet, offset, available, tvb);
+        //printf("Found 0x%02x: %d available, need %d\n", (int)packet, available, len);
         if (len == -1 || len > available) {
             pinfo->desegment_offset = offset;
             if ( len == -1 ) {
