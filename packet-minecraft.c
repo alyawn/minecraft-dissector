@@ -74,8 +74,10 @@ static const value_string animations[] = {
     {0, "None"},
     {1, "Swing arm"},
     {2, "Take damage"},
+    {3, "Leave bed"},
     {104, "Crouch"},
     {105, "Stand"},
+    {0, NULL}
 };
 
 #ifndef ENABLE_STATIC

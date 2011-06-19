@@ -65,22 +65,22 @@ void proto_register_minecraft(void)
               {"Coordinates", "mc.coords", FT_NONE, BASE_NONE, NULL, 0x0, "Coordinates", HFILL }
             },
             { &hf_mc_x,
-              {"X", "mc.x", FT_DOUBLE, BASE_DEC, NULL, 0x0, "X Coord", HFILL }
+              {"X", "mc.x", FT_DOUBLE, BASE_NONE, NULL, 0x0, "X Coord", HFILL }
             },
             { &hf_mc_y,
-              {"Y", "mc.y", FT_DOUBLE, BASE_DEC, NULL, 0x0, "Y Coord", HFILL }
+              {"Y", "mc.y", FT_DOUBLE, BASE_NONE, NULL, 0x0, "Y Coord", HFILL }
             },
             { &hf_mc_z,
-              {"Z", "mc.z", FT_DOUBLE, BASE_DEC, NULL, 0x0, "Z Coord", HFILL }
+              {"Z", "mc.z", FT_DOUBLE, BASE_NONE, NULL, 0x0, "Z Coord", HFILL }
             },
             { &hf_mc_stance,
-              {"Stance", "mc.stance", FT_DOUBLE, BASE_DEC, NULL, 0x0, "Stance", HFILL }
+              {"Stance", "mc.stance", FT_DOUBLE, BASE_NONE, NULL, 0x0, "Stance", HFILL }
             },
             { &hf_mc_rotation,
-              {"Rotation", "mc.rotation", FT_FLOAT, BASE_DEC, NULL, 0x0, "Rotation", HFILL }
+              {"Rotation", "mc.rotation", FT_FLOAT, BASE_NONE, NULL, 0x0, "Rotation", HFILL }
             },
             { &hf_mc_pitch,
-              {"Pitch", "mc.pitch", FT_FLOAT, BASE_DEC, NULL, 0x0, "Pitch", HFILL }
+              {"Pitch", "mc.pitch", FT_FLOAT, BASE_NONE, NULL, 0x0, "Pitch", HFILL }
             },
             { &hf_mc_status,
               {"Status", "mc.status", FT_INT8, BASE_DEC, NULL, 0x0, "Status", HFILL }
