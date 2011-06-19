@@ -25,6 +25,13 @@ THE SOFTWARE.
 # include "config.h"
 #endif
 
+#if 1
+/* Include only as needed */
+#include <stdio.h>
+/* #include <stdlib.h> */
+/* #include <string.h> */
+#endif
+
 #include <gmodule.h>
 #include <epan/prefs.h>
 #include <epan/packet.h>

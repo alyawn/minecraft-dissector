@@ -1,5 +1,5 @@
 # Modify to point to your Wireshark and glib include directories
-INCS = -I/usr/include/wireshark -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
+INCS = -I/usr/include/wireshark -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/glib-2.0/include
 
 SRCS     = packet-minecraft.c
 
