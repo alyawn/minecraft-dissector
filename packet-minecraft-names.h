@@ -28,7 +28,7 @@ static const value_string packettypenames[] = {
     { 0x03, "Chat" },
     { 0x04, "Update Time" },
     { 0x05, "Inventory" },
-    { 0x06, "Compass Target"},
+    { 0x06, "Spawn Position/Compass Direction"},
     { 0x07, "Use Entity(?)"},
     { 0x08, "Update Health"},
     { 0x0A, "Player on ground" },
@@ -54,6 +54,7 @@ static const value_string packettypenames[] = {
     { 0x20, "Entity Look" },
     { 0x21, "Relative Entity Move + Look" },
     { 0x22, "Entity Teleport" },
+    { 0x26, "Entity Status" },
     { 0x27, "Attach Entity?" },
     { 0x28, "Entity Metadata" },
     { 0x32, "Pre-Chunk" },
@@ -70,6 +71,7 @@ static const value_string packettypenames[] = {
     { 0x68, "Window Items"},
     { 0x69, "Progress Bar"},
     { 0x6A, "Transaction"},
+    { 0xC8, "Increment Statistic"},
     { 0xFF, "Kick" },
     { 0, NULL }
 };

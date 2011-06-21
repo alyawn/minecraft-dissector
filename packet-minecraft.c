@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include <gmodule.h>
 #include <epan/prefs.h>
 #include <epan/packet.h>
+#include <epan/emem.h>
 #include <epan/dissectors/packet-tcp.h>
 
 /* forward reference */
@@ -93,6 +94,24 @@ static const value_string animations[] = {
     {104, "Crouch"},
     {105, "Stand"},
     {0, NULL}
+};
+
+static const value_string mobtypes[] = {
+    {50, "Creeper"},
+    {51, "Skeleton"},
+    {52, "Spider"},
+    {53, "GiantZombie"},
+    {54, "Zombie"},
+    {55, "Slime"},
+    {56, "Ghast"},
+    {57, "ZombiePigman"},
+    {90, "Pig"},
+    {91, "Sheep"},
+    {92, "Cow"},
+    {93, "Chicken"},
+    {94, "Squid"},
+    {95, "Wolf"},
+    {0,  NULL}
 };
 
 #ifndef ENABLE_STATIC
@@ -253,7 +272,8 @@ static void add_int_coordinates( proto_tree *tree, tvbuff_t *tvb, packet_info *p
     y = tvb_get_ntohint(tvb, offset+yoffset, y_size);
     z = tvb_get_ntohint(tvb, offset+zoffset, z_size);
 
-    ti = proto_tree_add_none_format(tree, hf_mc_int_coords, tvb, offset, -1, "Coordinates: %d, %d, %d", (gint32)tvb_get_ntohl(tvb, offset+xoffset), y, (gint32)tvb_get_ntohl(tvb, offset+zoffset));
+    ti = proto_tree_add_none_format(tree, hf_mc_int_coords, tvb, offset + xoffset, x_size + y_size + z_size, 
+				    "Coordinates: %d, %d, %d", (gint32)tvb_get_ntohl(tvb, offset+xoffset), y, (gint32)tvb_get_ntohl(tvb, offset+zoffset));
     coord_tree = proto_item_add_subtree(ti, ett_mc_int_coords);
 
     proto_tree_add_item_varint(coord_tree, hf_mc_xbyte, hf_mc_xint, tvb, offset+xoffset, 4);
@@ -411,6 +431,15 @@ static void add_pickup_spawn_details( proto_tree *tree, tvbuff_t *tvb, packet_in
     proto_tree_add_item(tree, hf_mc_roll_byte, tvb, offset + 24, 1, FALSE);
 }
 
+static void add_entity_status_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+{
+    offset += MC_TYPELEN_PDUTYPE;
+    proto_tree_add_item(tree, hf_mc_entity_id, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+    proto_tree_add_item(tree, hf_mc_entity_status, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+}
+
 static void add_pre_chunk_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
     proto_tree_add_item(tree, hf_mc_xint, tvb, offset + 1, 4, FALSE);
@@ -466,6 +495,28 @@ static void add_object_vehicle_details( proto_tree *tree, tvbuff_t *tvb, packet_
     proto_tree_add_item(tree, hf_mc_yint, tvb, offset + 10, 4, FALSE);
     proto_tree_add_item(tree, hf_mc_zint, tvb, offset + 14, 4, FALSE);
 }
+
+static void add_mobspawn_details ( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+{
+    offset += MC_TYPELEN_PDUTYPE;
+    
+    proto_tree_add_item(tree, hf_mc_entity_id, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+    
+    proto_tree_add_item(tree, hf_mc_mob_type, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+    
+    proto_tree_add_item(tree, hf_mc_xint, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+    proto_tree_add_item(tree, hf_mc_yint, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+    proto_tree_add_item(tree, hf_mc_zint, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+    proto_tree_add_item(tree, hf_mc_rotation_byte, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+    proto_tree_add_item(tree, hf_mc_pitch_byte, tvb, offset, MC_TYPELEN_BYTE, FALSE);    
+    offset += MC_TYPELEN_BYTE;  
+}
 static void add_destroy_entity_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
     proto_tree_add_item(tree, hf_mc_unique_id, tvb, offset + 1, 4, FALSE);
@@ -496,7 +547,18 @@ static void add_relative_entity_move_look_details( proto_tree *tree, tvbuff_t *t
     proto_tree_add_item(tree, hf_mc_zbyte, tvb, offset + 7, 1, FALSE);
     proto_tree_add_item(tree, hf_mc_rotation_byte, tvb, offset + 8, 1, FALSE);
     proto_tree_add_item(tree, hf_mc_pitch_byte, tvb, offset + 9, 1, FALSE);
-
+}
+static void add_increment_statistic_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+{
+    offset += MC_TYPELEN_PDUTYPE;
+    proto_tree_add_item(tree, hf_mc_statistics_id, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+    proto_tree_add_item(tree, hf_mc_statistics_increment, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+}
+static void add_kick_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+{
+  proto_tree_add_item_ucs2string(tree, hf_mc_kick, tvb, offset + 1);
 }
 
 static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, guint8 type,  guint32 offset, guint32 length)
@@ -576,6 +638,9 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         case 0x17:
             add_object_vehicle_details(mc_tree, tvb, pinfo, offset);
             break;
+	case 0x18:
+	    add_mobspawn_details(mc_tree, tvb, pinfo, offset);
+	    break;
         case 0x1D:
             add_destroy_entity_details(mc_tree, tvb, pinfo, offset);
             break;
@@ -588,6 +653,9 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         case 0x21:
             add_relative_entity_move_look_details(mc_tree, tvb, pinfo, offset);
             break;
+	case 0x26:
+	    add_entity_status_details(mc_tree, tvb, pinfo, offset);
+	    break;	    
             /* ... */
         case 0x32:
             add_pre_chunk_details(mc_tree, tvb, pinfo, offset);
@@ -601,12 +669,20 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         case 0x3b:
             add_complex_entity_details(mc_tree, tvb, pinfo, offset);
             break;
+	case 0xc8:
+	    add_increment_statistic_details(mc_tree, tvb, pinfo, offset);
+	    break;
+	case 0xff:
+	    add_kick_details(mc_tree, tvb, pinfo, offset);
+	    break;	    
         }
     }
 }
 
 guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuff_t *tvb) {
-    guint len=-1;
+    guint len = -1;
+    guint rel_offset = 0;
+    
     switch (type) {
     case 0x00: return 1;
     case 0x01:
@@ -678,17 +754,14 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x16: return 9;
     case 0x17: return 18;
     case 0x18:
-        if(available < 21) { return -1; }
-        /* Find termination byte 0x7f */
-        for(len = 21;
-            (len <= available) && (tvb_get_guint8(tvb, offset+len-1) != 0x7f);
-            len++) { }
-        if(len > available){
-            /* TODO OPTIMIZATION: Cache len so we can start where we left off, 
-               instead of starting from scratch each time */
-            return -1;
+	rel_offset = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE + MC_TYPELEN_INT * 3 + MC_TYPELEN_BYTE * 2;
+	if ( available > rel_offset ) 
+	{	    
+	    len = metadata_len(tvb, offset + rel_offset, available);
+	    if ( len != -1 )
+		len += rel_offset;
         }
-        return len;
+        break;
     case 0x19: 
 	if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
 	{
@@ -704,8 +777,16 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x20: return 7;
     case 0x21: return 10;
     case 0x22: return 19;
+    case 0x26: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE;
     case 0x27: return 9;
-    case 0x28: return 5 + metadata_len(tvb, offset + 5, available);
+    case 0x28: 
+	if ( available > MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT ) 
+	{
+	    len = metadata_len(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT, available);
+	    if ( len != -1 ) 
+		len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT;
+	}
+	break;
     case 0x32: return 10;
     case 0x33:
         if ( available >= 18 ) {
@@ -765,6 +846,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     }
     case 0x69: return 6;
     case 0x6A: return 5;
+    case 0xC8: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE;      
     case 0xFF:
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN )
 	{
