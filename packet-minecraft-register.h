@@ -35,25 +35,25 @@ void proto_register_minecraft(void)
               { "Type", "mc.type", FT_UINT8, BASE_HEX, VALS(packettypenames), 0x0, "Packet Type", HFILL }
             },
             { &hf_mc_server_name,
-              {"Server Name", "mc.server_name", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
+              {"Server Name", "mc.server_name", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_motd,
               {"MOTD", "mc.motd", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_username,
-              {"Username", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
+              {"Username", "mc.username", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_password,
               {"Password", "mc.password", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_serverid,
-              {"Server ID", "mc.server_id", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
+              {"Server ID", "mc.server_id", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_handshake_username,
               {"Handshake Username", "mc.handshake_username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_chat,
-              {"Chat", "mc.chat", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL}
+              {"Chat", "mc.chat", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL}
             },
             { &hf_mc_time,
               {"Time", "mc.time", FT_INT64, BASE_DEC, NULL, 0x0, "Update Time", HFILL }
@@ -159,8 +159,8 @@ void proto_register_minecraft(void)
             },
             { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
             { &hf_mc_entity_id, {"Entity ID", "mc.entityid", FT_INT32, BASE_DEC, NULL, 0x0, "Entity ID", HFILL } },
-            { &hf_mc_login_username, {"username", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
-            { &hf_mc_login_password, {"password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
+            { &hf_mc_login_username, {"Username", "mc.username", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL} },
+            { &hf_mc_login_password, {"Password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },
             { &hf_mc_login_dimension, {"Dimension", "mc.dimension", FT_INT8, BASE_DEC, NULL, 0x0, "Dimension", HFILL } },
             { &hf_mc_inventory_slot, {"Inventory slot", "mc.invslot", FT_INT16, BASE_DEC, NULL, 0x0, "Inventory slot", HFILL } },

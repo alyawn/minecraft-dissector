@@ -32,11 +32,11 @@ THE SOFTWARE.
 /* #include <string.h> */
 #endif
 
+#include <glib.h>
 #include <gmodule.h>
 #include <epan/prefs.h>
 #include <epan/packet.h>
 #include <epan/dissectors/packet-tcp.h>
-
 
 /* forward reference */
 void proto_register_minecraft();
@@ -50,8 +50,23 @@ G_MODULE_EXPORT const gchar version[] = "0.0";
 
 #define PROTO_TAG_MC "MC"
 
+#define MC_MAX_UCS2LEN     1024
+
+#define MC_TYPELEN_BYTE    1
+#define MC_TYPELEN_SHORT   2
+#define MC_TYPELEN_INT     4
+#define MC_TYPELEN_LONG    8
+#define MC_TYPELEN_FLOUT   4
+#define MC_TYPELEN_DOUBLE  8
+#define MC_TYPELEN_UTF8LEN 2
+#define MC_TYPELEN_UCS2LEN 2
+#define MC_TYPELEN_BOOL    1
+
+#define MC_TYPELEN_PDUTYPE 1
+
 static int proto_minecraft = -1;
 static dissector_handle_t minecraft_handle;
+static GIConv ucs2_iconv= (GIConv)-1;
 
 proto_item *mc_item = NULL;
 proto_item *mc_sub_item = NULL;
@@ -117,6 +132,9 @@ void proto_reg_handoff_minecraft(void)
     if (!Initialized) {
         minecraft_handle = create_dissector_handle(dissect_minecraft, proto_minecraft);
         dissector_add("tcp.port", 25565, minecraft_handle);
+	ucs2_iconv = g_iconv_open( "UTF-8//TRANSLIT", "UCS-2BE" );
+	
+	Initialized = TRUE;
     }
 }
 
@@ -172,6 +190,59 @@ static void proto_tree_add_item_varint(proto_tree *tree, gint hf_id_byte, gint h
     }
 }
 
+static void proto_tree_add_item_ucs2string (proto_tree *tree, int hfindex, tvbuff_t *tvb, gint start ) 
+{
+    guint16 ucs2_len;
+    gboolean dump_bytes = FALSE;
+        
+    ucs2_len = tvb_get_ntohs( tvb, start );
+
+    if ( ucs2_iconv != (GIConv)-1 && ucs2_len <= MC_MAX_UCS2LEN )
+    {
+	gchar *in, *out, *out_const;
+	gsize in_len, out_len, rv_iconv;
+	
+	in_len = ucs2_len * 2;
+	in = (gchar*)tvb_get_ptr(tvb, start + MC_TYPELEN_UCS2LEN, in_len);
+	
+	if ( in ) 
+	{
+	    out_len = ucs2_len*2;
+	    out_const = ep_alloc0( (size_t)out_len + 1);
+	    out = out_const;
+	}
+	
+	if ( in != NULL && out != NULL )
+	{
+	    rv_iconv = g_iconv( ucs2_iconv, &in, &in_len, &out, &out_len );
+	    if ( -1 != rv_iconv ) 
+	    {
+		proto_tree_add_bytes_format_value( tree, hfindex, tvb, start, ucs2_len*2 + MC_TYPELEN_UCS2LEN, 
+						   tvb_get_ptr( tvb, start, ucs2_len*2 + MC_TYPELEN_UCS2LEN), 
+						   "%s", out_const );    
+	    }	   
+	    else 
+	    {
+		g_iconv( ucs2_iconv, NULL, 0, NULL, 0 );
+		dump_bytes = TRUE;
+	    }	    
+	}
+	else 
+	{
+	    dump_bytes = TRUE;
+	}
+    }
+    else 
+    {
+	dump_bytes = TRUE;
+    }
+
+    if ( dump_bytes ) 
+    {
+	proto_tree_add_item(tree, hfindex, tvb, start, MC_TYPELEN_UCS2LEN + ucs2_len * 2, FALSE);
+    }
+}
+
 static void add_int_coordinates( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, guint32 xoffset, guint x_size, guint32 yoffset, guint y_size, guint32 zoffset, guint z_size)
 {
     proto_item *ti;
@@ -204,43 +275,32 @@ static void add_double_coordinates( proto_tree *tree, tvbuff_t *tvb, packet_info
 
 static void add_login_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
 {
-    guint16 strlen1, strlen2;
+    guint16 ucs2_len;
 
-    offset += 1;
+    offset += MC_TYPELEN_PDUTYPE;
 
-    proto_tree_add_item(tree, c2s?hf_mc_login_protocol_version:hf_mc_entity_id, tvb, offset, 4, FALSE);
-    offset += 4;
+    proto_tree_add_item(tree, c2s?hf_mc_login_protocol_version:hf_mc_entity_id, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
 
-    strlen1 = tvb_get_ntohs( tvb, offset );
-    offset += 2;
-    proto_tree_add_item(tree, c2s?hf_mc_login_username:hf_mc_server_name, tvb, offset, strlen1, FALSE);
-    offset += strlen1;
-
-    strlen2 = tvb_get_ntohs( tvb, offset );
-    offset += 2;
-    proto_tree_add_item(tree, c2s?hf_mc_login_password:hf_mc_motd, tvb, offset, strlen2, FALSE);
-    offset += strlen2;
-
-    proto_tree_add_item(tree, hf_mc_login_map_seed, tvb, offset, 8, FALSE);
-    offset += 8;
-    proto_tree_add_item(tree, hf_mc_login_dimension, tvb, offset, 1, FALSE);
+    ucs2_len = tvb_get_ntohs( tvb, offset );    
+    proto_tree_add_item_ucs2string( tree, c2s?hf_mc_login_username:hf_mc_server_name, tvb, offset );    
+    offset += MC_TYPELEN_UCS2LEN + ucs2_len * 2;
+    
+    proto_tree_add_item(tree, hf_mc_login_map_seed, tvb, offset, MC_TYPELEN_LONG, FALSE);
+    offset += MC_TYPELEN_LONG;
+    
+    proto_tree_add_item(tree, hf_mc_login_dimension, tvb, offset, MC_TYPELEN_BYTE, FALSE);    
 }
 
 static void add_handshake_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
 {
-    guint16 strlen1;
     gint hf = c2s ? hf_mc_username : hf_mc_serverid;
-
-    strlen1 = tvb_get_ntohs( tvb, offset + 1 );
-    proto_tree_add_item(tree, hf, tvb, offset + 3, strlen1, FALSE);
+    proto_tree_add_item_ucs2string(tree, hf, tvb, offset + MC_TYPELEN_PDUTYPE);
 }
 
 static void add_chat_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
-    guint16 strlen1;
-
-    strlen1 = tvb_get_ntohs( tvb, offset + 1 );
-    proto_tree_add_item(tree, hf_mc_chat, tvb, offset + 3, strlen1, FALSE);
+    proto_tree_add_item_ucs2string(tree, hf_mc_chat, tvb, offset + MC_TYPELEN_PDUTYPE);
 }
 static void add_time_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
@@ -550,25 +610,25 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     switch (type) {
     case 0x00: return 1;
     case 0x01:
-    {
-        int len_strA, len_strB;
-        if ( available >= 7 ) {
-            len_strA = tvb_get_ntohs(tvb, offset + 5);
-            if ( available >= 9 + len_strA ) {
-                len_strB = tvb_get_ntohs(tvb, offset + 7 + len_strA);
-                len = 5 + (2 + len_strA) + (2 + len_strB) + 9;
-            }
+        if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
+	{
+	    len = tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT) * 2;
+	    len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +  + 
+		   MC_TYPELEN_LONG + MC_TYPELEN_BYTE;
         }
-    }
-    break;
+	break;
     case 0x02:
-        if ( available >= 3 ) {
-            len = 3 + tvb_get_ntohs(tvb, offset + 1);
+        if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN ) 
+	{
+            len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN + 
+                  tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE) * 2;
         }
-        break;
+        break;	
     case 0x03:
-        if ( available >= 3 ) {
-            len = 3 + tvb_get_ntohs(tvb, offset + 1);
+        if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN )
+	{
+            len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN + 
+                  tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE) * 2;
         }
         break;
     case 0x04: return 9;
@@ -630,8 +690,12 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         }
         return len;
     case 0x19: 
-        if(available < 23) { return -1; }
-        return 23 + tvb_get_ntohs(tvb, offset+5);
+	if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
+	{
+	    len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +
+	          tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN) * 2 +
+	          MC_TYPELEN_INT * 4;
+	}
         break;
     case 0x1C: return 11;
     case 0x1D: return 5;
@@ -701,9 +765,11 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     }
     case 0x69: return 6;
     case 0x6A: return 5;
-    case 0xff:
-        if ( available >= 3 ) {
-            len = 3 + tvb_get_ntohs(tvb, offset + 1);
+    case 0xFF:
+        if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN )
+	{
+            len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN +
+                  tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN) * 2;
         }
         break;
     default:
