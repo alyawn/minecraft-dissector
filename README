@@ -1,18 +1,40 @@
-This is a WireShark dissector to decode the Minecraft protocol.  It is incomplete but useful.
 
-Home page: http://file///home/chaos/public_html/alan/games/video/minecraft/minecraft-dissector.html
+# README
 
+    This is a WireShark dissector to decode the Minecraft protocol.  It is 
+    incomplete but useless. Especially you should keep these words from the 
+    license in mind:
 
+    > IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+    > CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+    > TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+    > SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-run Make in the directory
+# HOWTO
 
-it expects /usr/include/wireshark to exist, on ubuntu aptitude install wireshark-dev
+    run Make in the directory
 
-It should copy the plugin to ~/.wireshark/plugins, and then loading a wireshark packet dump should decode the packet types.
+    it expects /usr/include/wireshark to exist, on ubuntu aptitude install wireshark-dev
 
-When I tested, I used a tcpdump with full packets, I'd recommend the same or things will probably break.
+    It should copy the plugin to ~/.wireshark/plugins, and then loading a wireshark packet dump should decode the packet types.
 
-ex:
-tcpdump -w minecraft.dump -s 0 'port 25565'
+    When I tested, I used a tcpdump with full packets, I'd recommend the same or things will probably break.
 
-Enjoy!
+    ex:
+    tcpdump -w minecraft.dump -s 0 'port 25565'
+
+# CREDITS
+
+    * for the playground
+        * http://www.wireshark.org
+    * for initial development
+        * https://github.com/ScottBrooks/minecraft-dissector
+        * https://github.com/AlanDeSmet/minecraft-dissector
+    * for all protocol wisdom
+        * http://mc.kev009.com/Main_Page
+    * for inspiration and stuff
+        * https://github.com/superjoe30/mineflayer
+
+# NUMBER PLATE
+
+    Enjoy!

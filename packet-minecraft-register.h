@@ -146,7 +146,7 @@ void proto_register_minecraft(void)
               {"Size Z", "mc.size_z", FT_INT8, BASE_DEC, NULL, 0x0, "Z Size", HFILL }
             },
             { &hf_mc_block_type_byte,
-              {"Block/Item Type", "mc.block_type_byte", FT_INT8, BASE_DEC, NULL, 0x0, "Block/Item Type", HFILL }
+              {"Block/Item Type", "mc.block_type_byte", FT_INT8, BASE_DEC, VALS(itemtypes), 0x0, "Block/Item Type", HFILL }
             },
             { &hf_mc_block_meta_byte,
               {"Block Metadata", "mc.block_meta_byte", FT_INT8, BASE_DEC, NULL, 0x0, "Block Metadata", HFILL }
@@ -160,18 +160,18 @@ void proto_register_minecraft(void)
             { &hf_mc_life,
               {"Life", "mc.life", FT_INT16, BASE_DEC, NULL, 0x0, "Life", HFILL }
             },
-	    { &hf_mc_statistics_id,
-		{"Statistics ID", "mc.statistics_id", FT_INT32, BASE_DEC, NULL, 0x0, "Statistics ID", HFILL }
-	    },
-	    { &hf_mc_statistics_increment,
-		{"Statistics Increment", "mc.statistics_increment", FT_INT8, BASE_DEC, NULL, 0x0, "Statistics Increment", HFILL }
-	    },
-	    { &hf_mc_kick,
-	      {"Kicked", "mc.kick", FT_BYTES, BASE_NONE, NULL, 0x0, "Kicked", HFILL }
-	    },
-            { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
+            { &hf_mc_statistics_id,
+                {"Statistics ID", "mc.statistics_id", FT_INT32, BASE_DEC, NULL, 0x0, "Statistics ID", HFILL }
+            },
+            { &hf_mc_statistics_increment,
+                {"Statistics Increment", "mc.statistics_increment", FT_INT8, BASE_DEC, NULL, 0x0, "Statistics Increment", HFILL }
+            },
+            { &hf_mc_kick,
+                {"Kicked", "mc.kick", FT_BYTES, BASE_NONE, NULL, 0x0, "Kicked", HFILL }
+            },
+                { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
             { &hf_mc_entity_id, {"Entity ID", "mc.entityid", FT_INT32, BASE_DEC, NULL, 0x0, "Entity ID", HFILL } },
-	    { &hf_mc_entity_status, {"Entity Status", "mc.entitystatus", FT_UINT8, BASE_DEC, NULL, 0x0, "Entity Status", HFILL } },
+            { &hf_mc_entity_status, {"Entity Status", "mc.entitystatus", FT_UINT8, BASE_DEC, NULL, 0x0, "Entity Status", HFILL } },
             { &hf_mc_login_username, {"Username", "mc.username", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_password, {"Password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },

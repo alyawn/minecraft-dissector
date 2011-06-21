@@ -76,43 +76,7 @@ proto_tree *mc_header_tree = NULL;
 
 #include "packet-minecraft-names.h"
 
-static const value_string directionnames[] = {
-    {0, "-Y"},
-    {1, "+Y"},
-    {2, "-Z"},
-    {3, "+Z"},
-    {4, "-X"},
-    {5, "+X"},
-    {0, NULL}
-};
-
-static const value_string animations[] = {
-    {0, "None"},
-    {1, "Swing arm"},
-    {2, "Take damage"},
-    {3, "Leave bed"},
-    {104, "Crouch"},
-    {105, "Stand"},
-    {0, NULL}
-};
-
-static const value_string mobtypes[] = {
-    {50, "Creeper"},
-    {51, "Skeleton"},
-    {52, "Spider"},
-    {53, "GiantZombie"},
-    {54, "Zombie"},
-    {55, "Slime"},
-    {56, "Ghast"},
-    {57, "ZombiePigman"},
-    {90, "Pig"},
-    {91, "Sheep"},
-    {92, "Cow"},
-    {93, "Chicken"},
-    {94, "Squid"},
-    {95, "Wolf"},
-    {0,  NULL}
-};
+#include "packet-minecraft-values.h"
 
 #ifndef ENABLE_STATIC
 G_MODULE_EXPORT void plugin_register(void)
@@ -151,9 +115,9 @@ void proto_reg_handoff_minecraft(void)
     if (!Initialized) {
         minecraft_handle = create_dissector_handle(dissect_minecraft, proto_minecraft);
         dissector_add("tcp.port", 25565, minecraft_handle);
-	ucs2_iconv = g_iconv_open( "UTF-8//TRANSLIT", "UCS-2BE" );
-	
-	Initialized = TRUE;
+        ucs2_iconv = g_iconv_open( "UTF-8//TRANSLIT", "UCS-2BE" );
+
+        Initialized = TRUE;
     }
 }
 
@@ -653,9 +617,9 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         case 0x21:
             add_relative_entity_move_look_details(mc_tree, tvb, pinfo, offset);
             break;
-	case 0x26:
-	    add_entity_status_details(mc_tree, tvb, pinfo, offset);
-	    break;	    
+        case 0x26:
+            add_entity_status_details(mc_tree, tvb, pinfo, offset);
+            break;    
             /* ... */
         case 0x32:
             add_pre_chunk_details(mc_tree, tvb, pinfo, offset);
@@ -669,12 +633,12 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         case 0x3b:
             add_complex_entity_details(mc_tree, tvb, pinfo, offset);
             break;
-	case 0xc8:
-	    add_increment_statistic_details(mc_tree, tvb, pinfo, offset);
-	    break;
-	case 0xff:
-	    add_kick_details(mc_tree, tvb, pinfo, offset);
-	    break;	    
+        case 0xc8:
+            add_increment_statistic_details(mc_tree, tvb, pinfo, offset);
+            break;
+        case 0xff:
+            add_kick_details(mc_tree, tvb, pinfo, offset);
+            break;
         }
     }
 }
@@ -687,12 +651,12 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x00: return 1;
     case 0x01:
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
-	{
-	    len = tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT) * 2;
-	    len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +  + 
-		   MC_TYPELEN_LONG + MC_TYPELEN_BYTE;
+        {
+            len = tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT) * 2;
+            len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +  + 
+                   MC_TYPELEN_LONG + MC_TYPELEN_BYTE;
         }
-	break;
+        break;
     case 0x02:
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN ) 
 	{
@@ -754,21 +718,21 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x16: return 9;
     case 0x17: return 18;
     case 0x18:
-	rel_offset = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE + MC_TYPELEN_INT * 3 + MC_TYPELEN_BYTE * 2;
-	if ( available > rel_offset ) 
-	{	    
-	    len = metadata_len(tvb, offset + rel_offset, available);
-	    if ( len != -1 )
-		len += rel_offset;
+        rel_offset = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE + MC_TYPELEN_INT * 3 + MC_TYPELEN_BYTE * 2;
+        if ( available > rel_offset ) 
+        {
+            len = metadata_len(tvb, offset + rel_offset, available);
+            if ( len != -1 )
+                len += rel_offset;
         }
         break;
     case 0x19: 
-	if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
-	{
-	    len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +
-	          tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN) * 2 +
-	          MC_TYPELEN_INT * 4;
-	}
+        if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
+        {
+            len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +
+                    tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN) * 2 +
+                    MC_TYPELEN_INT * 4;
+        }
         break;
     case 0x1C: return 11;
     case 0x1D: return 5;
@@ -780,13 +744,13 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x26: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE;
     case 0x27: return 9;
     case 0x28: 
-	if ( available > MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT ) 
-	{
-	    len = metadata_len(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT, available);
-	    if ( len != -1 ) 
-		len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT;
-	}
-	break;
+        if ( available > MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT ) 
+        {
+            len = metadata_len(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT, available);
+            if ( len != -1 ) 
+                len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT;
+            }
+        break;
     case 0x32: return 10;
     case 0x33:
         if ( available >= 18 ) {
@@ -849,7 +813,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0xC8: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE;      
     case 0xFF:
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN )
-	{
+        {
             len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN +
                   tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN) * 2;
         }
