@@ -160,6 +160,18 @@ void proto_register_minecraft(void)
             { &hf_mc_life,
               {"Life", "mc.life", FT_INT16, BASE_DEC, NULL, 0x0, "Life", HFILL }
             },
+            { &hf_mc_sign_line1,
+                {"Line #1", "mc.sign1", FT_BYTES, BASE_NONE, NULL, 0x0, "Line #1", HFILL}
+            },
+            { &hf_mc_sign_line2,
+                {"Line #2", "mc.sign2", FT_BYTES, BASE_NONE, NULL, 0x0, "Line #2", HFILL}
+            },
+            { &hf_mc_sign_line3,
+                {"Line #3", "mc.sign3", FT_BYTES, BASE_NONE, NULL, 0x0, "Line #3", HFILL}
+            },
+            { &hf_mc_sign_line4,
+                {"Line #4", "mc.sign4", FT_BYTES, BASE_NONE, NULL, 0x0, "Line #4", HFILL}
+            },            
             { &hf_mc_statistics_id,
                 {"Statistics ID", "mc.statistics_id", FT_INT32, BASE_DEC, NULL, 0x0, "Statistics ID", HFILL }
             },
@@ -175,14 +187,14 @@ void proto_register_minecraft(void)
             { &hf_mc_login_username, {"Username", "mc.username", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_password, {"Password", "mc.username", FT_STRING, BASE_NONE, NULL, 0x0, "Text", HFILL} },
             { &hf_mc_login_map_seed, {"Map seed", "mc.mapseed", FT_INT64, BASE_DEC, NULL, 0x0, "Map seed", HFILL } },
-            { &hf_mc_login_dimension, {"Dimension", "mc.dimension", FT_INT8, BASE_DEC, NULL, 0x0, "Dimension", HFILL } },
+            { &hf_mc_dimension, {"Dimension", "mc.dimension", FT_INT8, BASE_DEC, VALS(dimensions), 0x0, "Dimension", HFILL } },
             { &hf_mc_inventory_slot, {"Inventory slot", "mc.invslot", FT_INT16, BASE_DEC, NULL, 0x0, "Inventory slot", HFILL } },
             { &hf_mc_count, {"Count", "mc.count", FT_INT8, BASE_DEC, NULL, 0x0, "Count", HFILL } },
             { &hf_mc_damage, {"Damage", "mc.damage", FT_INT16, BASE_DEC, NULL, 0x0, "Damage", HFILL } },
             { &hf_mc_animation, {"Animation", "mc.animation", FT_INT8, BASE_DEC, VALS(animations), 0x0, "Animation", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
-                              "Minecraft Beta v9 SMP Protocol", /* name */
+                              "Minecraft Beta v13 SMP Protocol", /* name */
                               "Minecraft",          /* short name */
                               "mc"	         /* abbrev */
                           );

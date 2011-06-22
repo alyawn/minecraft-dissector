@@ -40,6 +40,12 @@ static const value_string animations[] = {
     {0, NULL}
 };
 
+static const value_string dimensions[] = {
+    {0, "Normal World"},
+    {-1, "The Nether"},
+    {0, NULL}
+};
+
 static const value_string mobtypes[] = {
     {50, "Creeper"},
     {51, "Skeleton"},
