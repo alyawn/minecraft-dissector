@@ -897,7 +897,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN )
         {
             len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN +
-                  tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN) * 2;
+                  tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE) * 2;
         }
         break;
     default:
