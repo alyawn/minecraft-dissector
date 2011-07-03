@@ -69,7 +69,7 @@ static const value_string packettypenames[] = {
     { 0x3D, "Sound effect" },
     { 0x46, "New/Invalid State"},
     { 0x47, "Thunderbolt"},
-    { 0x64, "Window Close"},
+    { 0x64, "Window Open"},
     { 0x65, "Window Close"},
     { 0x66, "Window Click"},
     { 0x67, "Set Slot"},
