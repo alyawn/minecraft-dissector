@@ -272,8 +272,22 @@ static void add_login_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pin
     
     proto_tree_add_item(tree, hf_mc_login_map_seed, tvb, offset, MC_TYPELEN_LONG, FALSE);
     offset += MC_TYPELEN_LONG;
-    
+
+    proto_tree_add_item(tree, hf_mc_server_mode, tvb, offset, MC_TYPELEN_INT, FALSE);
+    offset += MC_TYPELEN_INT;
+
     proto_tree_add_item(tree, hf_mc_dimension, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+
+    proto_tree_add_item(tree, hf_mc_difficulty, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+
+    proto_tree_add_item(tree, hf_mc_world_height, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+
+    proto_tree_add_item(tree, hf_mc_max_players, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+
 }
 
 static void add_handshake_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset, gboolean c2s)
@@ -555,6 +569,27 @@ static void add_kick_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinf
   proto_tree_add_item_ucs2string(tree, hf_mc_kick, tvb, offset + 1);
 }
 
+
+static void add_player_list_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+{
+    guint16 ucs2_len;
+
+    offset += MC_TYPELEN_PDUTYPE;
+
+    ucs2_len = tvb_get_ntohs( tvb, offset );
+    proto_tree_add_item_ucs2string( tree, hf_mc_login_username, tvb, offset );
+    offset += MC_TYPELEN_UCS2LEN + ucs2_len * 2;
+
+    proto_tree_add_item(tree, hf_mc_online, tvb, offset, MC_TYPELEN_BYTE, FALSE);
+    offset += MC_TYPELEN_BYTE;
+
+    proto_tree_add_item(tree, hf_mc_ping, tvb, offset, MC_TYPELEN_SHORT, FALSE);
+    offset += MC_TYPELEN_BYTE;
+
+}
+
+
+
 static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, guint8 type,  guint32 offset, guint32 length)
 {
     gboolean c2s;
@@ -673,6 +708,9 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
         case 0xc8:
             add_increment_statistic_details(mc_tree, tvb, pinfo, offset);
             break;
+        case 0xc9:
+            add_player_list_details(mc_tree, tvb, pinfo, offset);
+            break;
         case 0xff:
             add_kick_details(mc_tree, tvb, pinfo, offset);
             break;
@@ -685,13 +723,14 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     guint rel_offset = 0;
     
     switch (type) {
-    case 0x00: return 1;
+    case 0x00: return 5;
     case 0x01:
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN )
         {
             len = tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT) * 2;
             len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_UCS2LEN +  + 
-                   MC_TYPELEN_LONG + MC_TYPELEN_BYTE;
+                   MC_TYPELEN_LONG + MC_TYPELEN_INT + MC_TYPELEN_BYTE + MC_TYPELEN_BYTE
+                   + MC_TYPELEN_BYTE + MC_TYPELEN_BYTE;
         }
         break;
     case 0x02:
@@ -740,7 +779,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     case 0x0A: return 2;
     case 0x0B: return 34;
     case 0x07: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_INT + MC_TYPELEN_BOOL;
-    case 0x08: return 3;
+    case 0x08: return 9;
     case 0x09: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_BYTE;         
     case 0x0C: return 10;
     case 0x0D: return 42;
@@ -892,7 +931,15 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_SHORT + MC_TYPELEN_SHORT + MC_TYPELEN_BYTE;
         len += tvb_get_guint8(tvb, offset + len);
         break;
-    case 0xC8: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE;      
+    case 0xC8: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_BYTE;
+    case 0xC9:
+        if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN + MC_TYPELEN_BYTE + MC_TYPELEN_SHORT)
+        {
+            len = tvb_get_ntohs(tvb, offset + MC_TYPELEN_PDUTYPE ) * 2;
+            len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN + MC_TYPELEN_BYTE + MC_TYPELEN_SHORT;
+        }
+        break;
+    case 0xFE: return MC_TYPELEN_PDUTYPE;
     case 0xFF:
         if ( available >= MC_TYPELEN_PDUTYPE + MC_TYPELEN_UCS2LEN )
         {

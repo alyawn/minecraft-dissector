@@ -79,6 +79,8 @@ static const value_string packettypenames[] = {
     { 0x82, "Update Sign"},
     { 0x83, "Map Data"},    
     { 0xC8, "Increment Statistic"},
+    { 0xC9, "Player List"},
+    { 0xFE, "Server List Ping"},
     { 0xFF, "Kick/Disconnect" },
     { 0, NULL }
 };

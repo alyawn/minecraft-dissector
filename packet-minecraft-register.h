@@ -192,9 +192,15 @@ void proto_register_minecraft(void)
             { &hf_mc_count, {"Count", "mc.count", FT_INT8, BASE_DEC, NULL, 0x0, "Count", HFILL } },
             { &hf_mc_damage, {"Damage", "mc.damage", FT_INT16, BASE_DEC, NULL, 0x0, "Damage", HFILL } },
             { &hf_mc_animation, {"Animation", "mc.animation", FT_INT8, BASE_DEC, VALS(animations), 0x0, "Animation", HFILL } },
+            { &hf_mc_server_mode, {"Server Mode", "mc.servermode", FT_INT32, BASE_DEC, VALS(server_modes), 0x0, "Server Mode", HFILL } },
+            { &hf_mc_difficulty, {"Difficulty", "mc.difficulty", FT_INT8, BASE_DEC, VALS(difficulties), 0x0, "Difficulty", HFILL } },
+            { &hf_mc_world_height, {"World Height", "mc.worldheight", FT_INT8, BASE_DEC, NULL, 0x0, "World Height", HFILL } },
+            { &hf_mc_max_players, {"Max Players", "mc.maxplayers", FT_INT8, BASE_DEC, NULL, 0x0, "Max Players", HFILL } },
+            { &hf_mc_online, {"Online", "mc.online", FT_INT8, BASE_DEC, NULL, 0x0, "Online", HFILL } },
+            { &hf_mc_ping, {"Ping", "mc.ping", FT_INT16, BASE_DEC, NULL, 0x0, "Ping", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
-                              "Minecraft Beta v13 SMP Protocol", /* name */
+                              "Minecraft Beta v18 SMP Protocol", /* name */
                               "Minecraft",          /* short name */
                               "mc"	         /* abbrev */
                           );

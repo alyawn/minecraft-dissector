@@ -271,3 +271,18 @@ static const value_string itemtypes[] = {
     {0x08D1, "Green Music Disc"},
     {0,  NULL}
 };
+
+static const value_string server_modes[] = {
+    {0, "Survival"},
+    {1, "Creative"},
+    {0, NULL}
+};
+
+static const value_string difficulties[] = {
+    {0, "Peaceful"},
+    {1, "Easy"},
+    {2, "Normal"},
+    {3, "Hard"},
+    {0, NULL}
+};
+
