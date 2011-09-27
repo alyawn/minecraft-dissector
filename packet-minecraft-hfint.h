@@ -89,3 +89,7 @@ static gint hf_mc_world_height = -1;
 static gint hf_mc_max_players = -1;
 static gint hf_mc_online = -1;
 static gint hf_mc_ping = -1;
+static gint hf_mc_food = -1;
+static gint hf_mc_health = -1;
+static gint hf_mc_food_saturation = -1;
+static gint hf_mc_quantity = -1;

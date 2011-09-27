@@ -178,10 +178,8 @@ void proto_register_minecraft(void)
             { &hf_mc_statistics_increment,
                 {"Statistics Increment", "mc.statistics_increment", FT_INT8, BASE_DEC, NULL, 0x0, "Statistics Increment", HFILL }
             },
-            { &hf_mc_kick,
-                {"Kicked", "mc.kick", FT_BYTES, BASE_NONE, NULL, 0x0, "Kicked", HFILL }
-            },
-                { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
+            { &hf_mc_kick, {"Kicked", "mc.kick", FT_BYTES, BASE_NONE, NULL, 0x0, "Kicked", HFILL } },
+            { &hf_mc_login_protocol_version, {"Protocol Version", "mc.protocol", FT_INT32, BASE_DEC, NULL, 0x0, "Protocol Version", HFILL } },
             { &hf_mc_entity_id, {"Entity ID", "mc.entityid", FT_INT32, BASE_DEC, NULL, 0x0, "Entity ID", HFILL } },
             { &hf_mc_entity_status, {"Entity Status", "mc.entitystatus", FT_UINT8, BASE_DEC, NULL, 0x0, "Entity Status", HFILL } },
             { &hf_mc_login_username, {"Username", "mc.username", FT_BYTES, BASE_NONE, NULL, 0x0, "Text", HFILL} },
@@ -198,6 +196,10 @@ void proto_register_minecraft(void)
             { &hf_mc_max_players, {"Max Players", "mc.maxplayers", FT_INT8, BASE_DEC, NULL, 0x0, "Max Players", HFILL } },
             { &hf_mc_online, {"Online", "mc.online", FT_INT8, BASE_DEC, NULL, 0x0, "Online", HFILL } },
             { &hf_mc_ping, {"Ping", "mc.ping", FT_INT16, BASE_DEC, NULL, 0x0, "Ping", HFILL } },
+            { &hf_mc_health, {"Health", "mc.health", FT_INT16, BASE_DEC, NULL, 0x0, "Health", HFILL } },
+            { &hf_mc_food, {"Food", "mc.food", FT_INT16, BASE_DEC, NULL, 0x0, "Food", HFILL } },
+            { &hf_mc_food_saturation, {"Food Saturation", "mc.foodsat", FT_FLOAT, BASE_NONE, NULL, 0x0, "Food Saturation", HFILL } },
+            { &hf_mc_quantity, { "Quantity", "mc.quantity", FT_INT16, BASE_DEC, NULL, 0x0, "Quantity", HFILL } },
         };
         proto_minecraft = proto_register_protocol (
                               "Minecraft Beta v18 SMP Protocol", /* name */

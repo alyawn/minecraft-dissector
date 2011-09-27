@@ -42,7 +42,7 @@ THE SOFTWARE.
 /* forward reference */
 void proto_register_minecraft();
 void proto_reg_handoff_minecraft();
-void dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree);
+int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree);
 
 /* Define version if we are not building Wireshark statically */
 #ifndef ENABLE_STATIC
@@ -107,13 +107,19 @@ static gint *ett[] = {
 
 #include "packet-minecraft-register.h"
 
+
+#define PROTO_TREE_ADD(tree, hf, tvb, offset, type_len) proto_tree_add_item(tree, hf, tvb, offset, type_len, FALSE); \
+                            offset += type_len;
+
+
+
 void proto_reg_handoff_minecraft(void)
 {
     static int Initialized=FALSE;
 
     /* register with wireshark to dissect udp packets on port 25565 */
     if (!Initialized) {
-        minecraft_handle = create_dissector_handle(dissect_minecraft, proto_minecraft);
+        minecraft_handle = new_create_dissector_handle(dissect_minecraft, proto_minecraft);
         dissector_add("tcp.port", 25565, minecraft_handle);
         ucs2_iconv = g_iconv_open( "UTF-8//TRANSLIT", "UCS-2BE" );
 
@@ -307,6 +313,16 @@ static void add_time_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinf
     time = tvb_get_ntoh64(tvb, offset + 1 );
     proto_tree_add_item(tree, hf_mc_time, tvb, offset + 1, 8, FALSE);
 }
+
+static void add_update_health_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
+{
+    offset += MC_TYPELEN_PDUTYPE;
+
+    PROTO_TREE_ADD(tree, hf_mc_health, tvb, offset, MC_TYPELEN_SHORT);
+    PROTO_TREE_ADD(tree, hf_mc_food, tvb, offset, MC_TYPELEN_SHORT);
+    PROTO_TREE_ADD(tree, hf_mc_food_saturation, tvb, offset, MC_TYPELEN_FLOAT);
+}
+
 static void add_loaded_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset)
 {
     proto_tree_add_item(tree, hf_mc_loaded, tvb, offset + 1, 1, FALSE);
@@ -588,6 +604,17 @@ static void add_player_list_details( proto_tree *tree, tvbuff_t *tvb, packet_inf
 
 }
 
+static void add_creative_inventory_action_details( proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint32 offset )
+{
+    offset += MC_TYPELEN_PDUTYPE;
+
+    PROTO_TREE_ADD(tree, hf_mc_inventory_slot, tvb, offset, MC_TYPELEN_SHORT);
+    PROTO_TREE_ADD(tree, hf_mc_item_code, tvb, offset, MC_TYPELEN_SHORT);
+    PROTO_TREE_ADD(tree, hf_mc_quantity, tvb, offset, MC_TYPELEN_SHORT);
+    PROTO_TREE_ADD(tree, hf_mc_damage, tvb, offset, MC_TYPELEN_SHORT);
+
+
+}
 
 
 static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, guint8 type,  guint32 offset, guint32 length)
@@ -631,6 +658,9 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
             break;
         case 0x06:
             add_spawn_details(mc_tree, tvb, pinfo, offset);
+            break;
+        case 0x08:
+            add_update_health_details(mc_tree, tvb, pinfo, offset);
             break;
         case 0x09:
             add_respawn_details(mc_tree, tvb, pinfo, offset);
@@ -688,8 +718,8 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
             break;
         case 0x26:
             add_entity_status_details(mc_tree, tvb, pinfo, offset);
-            break;    
-            /* ... */
+            break;
+        /* ... */
         case 0x32:
             add_pre_chunk_details(mc_tree, tvb, pinfo, offset);
             break;
@@ -698,6 +728,9 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
             break;
         case 0x35:
             add_block_change_details(mc_tree, tvb, pinfo, offset);
+            break;
+        case 0x6B:
+            add_creative_inventory_action_details(mc_tree, tvb, pinfo, offset);
             break;
         case 0x3b:
             add_complex_entity_details(mc_tree, tvb, pinfo, offset);
@@ -718,7 +751,8 @@ static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_t
     }
 }
 
-guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuff_t *tvb) {
+guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuff_t *tvb)
+{
     guint len = -1;
     guint rel_offset = 0;
     
@@ -776,11 +810,11 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     }
     break;
     case 0x06: return 13;
+    case 0x07: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_INT + MC_TYPELEN_BOOL;
+    case 0x08: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_SHORT + MC_TYPELEN_SHORT + MC_TYPELEN_FLOAT;
+    case 0x09: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_BYTE;         
     case 0x0A: return 2;
     case 0x0B: return 34;
-    case 0x07: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_INT + MC_TYPELEN_BOOL;
-    case 0x08: return 9;
-    case 0x09: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_BYTE;         
     case 0x0C: return 10;
     case 0x0D: return 42;
     case 0x0E: return 12;
@@ -836,6 +870,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
                 len += MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT;
             }
         break;
+    case 0x2B: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_BYTE + MC_TYPELEN_BYTE + MC_TYPELEN_SHORT;
     case 0x32: return 10;
     case 0x33:
         if ( available >= 18 ) {
@@ -902,6 +937,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
     }
     case 0x69: return 6;
     case 0x6A: return 5;
+    case 0x6B: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_SHORT + MC_TYPELEN_SHORT + MC_TYPELEN_SHORT + MC_TYPELEN_SHORT;
     case 0x82:
         len = MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_SHORT + MC_TYPELEN_INT;
         {
@@ -955,28 +991,33 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
 
 }
 
-#define FRAME_HEADER_LEN 17
-void dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
+int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 {
     guint8 packet;
-    guint offset=0;
+    guint offset = 0;
 
     while (offset < tvb_reported_length(tvb)) {
-        packet = tvb_get_guint8(tvb, offset);
-        gint available = tvb_reported_length_remaining(tvb, offset);
-        gint len = get_minecraft_message_len(packet, offset, available, tvb);
-        //printf("Found 0x%02x: %d available, need %d\n", (int)packet, available, len);
+
+        packet = tvb_get_guint8(tvb, offset);   // Grab the first byte
+                                                // which is used to determine
+                                                // the packet type
+
+        gint available  = tvb_reported_length_remaining(tvb, offset);
+        gint len        = get_minecraft_message_len(packet, offset, available, tvb);
+
         if (len == -1 || len > available) {
             pinfo->desegment_offset = offset;
             if ( len == -1 ) {
                 pinfo->desegment_len = DESEGMENT_ONE_MORE_SEGMENT;
+                return -1;
             } else {
                 pinfo->desegment_len = len - available;
+                return -pinfo->desegment_len;
             }
-            return;
         }
         dissect_minecraft_message(tvb, pinfo, tree, packet, offset, len);
         offset += len;
     }
+    return offset;
 }
 
