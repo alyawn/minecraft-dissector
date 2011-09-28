@@ -782,33 +782,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
         }
         break;
     case 0x04: return 9;
-    case 0x05:
-    {
-        if ( available >= 7 ) {
-            int num_inv, o, size, count;
-            gint16 val;
-            num_inv = tvb_get_ntohs(tvb, offset + 5);
-            o = offset + 7;
-            size = 0;
-            count = 0;
-            while ( o-offset < available && available -(o-offset) >= 2 && count != num_inv ) {
-                count++;
-
-                val = tvb_get_ntohs(tvb, o);
-                if ( val == -1 ) {
-                    size += 2;
-                    o += 2;
-                } else {
-                    size += 5;
-                    o += 5;
-                }
-            }
-            if ( count == num_inv ) {
-                len = 7 + size;
-            }
-        }
-    }
-    break;
+    case 0x05: return 11;
     case 0x06: return 13;
     case 0x07: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_INT + MC_TYPELEN_INT + MC_TYPELEN_BOOL;
     case 0x08: return MC_TYPELEN_PDUTYPE + MC_TYPELEN_SHORT + MC_TYPELEN_SHORT + MC_TYPELEN_FLOAT;
