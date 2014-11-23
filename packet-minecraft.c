@@ -32,6 +32,7 @@ THE SOFTWARE.
 /* #include <string.h> */
 #endif
 
+#include <wireshark/config.h>
 #include <glib.h>
 #include <gmodule.h>
 #include <epan/prefs.h>
