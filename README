@@ -12,7 +12,7 @@
 
 # HOWTO
 
-sudo apt-get install wireshark libgtk2.0-dev
+sudo apt-get install wireshark wireshark-dev libgtk2.0-dev
 
 sudo apt-get install git-core automake m4 pkg-config libtool
 
