@@ -12,6 +12,9 @@
 
 # HOWTO
 
+    For Ubuntu you need:
+    sudo apt-get install wireshark wireshark-dev libgtk2.0-dev pkg-config libtool
+
     run Make in the directory
 
     it expects /usr/include/wireshark to exist, on ubuntu aptitude install wireshark-dev

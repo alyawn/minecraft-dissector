@@ -21,9 +21,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+//#ifdef HAVE_CONFIG_H
+//# include "config.h"
+//#endif
 
 #if 1
 /* Include only as needed */
@@ -32,6 +32,7 @@ THE SOFTWARE.
 /* #include <string.h> */
 #endif
 
+#include <wireshark/config.h>
 #include <glib.h>
 #include <gmodule.h>
 #include <epan/prefs.h>
@@ -39,10 +40,22 @@ THE SOFTWARE.
 #include <epan/emem.h>
 #include <epan/dissectors/packet-tcp.h>
 
+
+
+//#if defined(VERSION_MAJOR) && (VERSION_MAJOR > 1 || (VERSION_MAJOR == 1 && VERSION_MINOR > 8))
+
+int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+//dissect_XXX(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+//#else
+//dissect_XXX(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree);
+//int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree);
+//#endif
+
+
 /* forward reference */
 void proto_register_minecraft();
 void proto_reg_handoff_minecraft();
-int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree);
+
 
 /* Define version if we are not building Wireshark statically */
 #ifndef ENABLE_STATIC
@@ -120,7 +133,7 @@ void proto_reg_handoff_minecraft(void)
     /* register with wireshark to dissect udp packets on port 25565 */
     if (!Initialized) {
         minecraft_handle = new_create_dissector_handle(dissect_minecraft, proto_minecraft);
-        dissector_add("tcp.port", 25565, minecraft_handle);
+        dissector_add_uint("tcp.port", 25565, minecraft_handle);
         ucs2_iconv = g_iconv_open( "UTF-8//TRANSLIT", "UCS-2BE" );
 
         Initialized = TRUE;
@@ -620,20 +633,20 @@ static void add_creative_inventory_action_details( proto_tree *tree, tvbuff_t *t
 static void dissect_minecraft_message(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, guint8 type,  guint32 offset, guint32 length)
 {
     gboolean c2s;
-    if (check_col(pinfo->cinfo, COL_PROTOCOL))
-        col_set_str(pinfo->cinfo, COL_PROTOCOL, PROTO_TAG_MC);
+    //   if (check_col(pinfo->cinfo, COL_PROTOCOL))
+    //    col_set_str(pinfo->cinfo, COL_PROTOCOL, PROTO_TAG_MC);
     /* Clear out stuff in the info column */
 //    if(check_col(pinfo->cinfo,COL_INFO)){
 //        col_clear(pinfo->cinfo,COL_INFO);
 //    }
-    c2s = pinfo->match_port == pinfo->destport;
+    c2s = TRUE;//pinfo->match_port == pinfo->destport;
 
-    if (check_col(pinfo->cinfo, COL_INFO)) {
-        col_add_fstr(pinfo->cinfo, COL_INFO, "%s: %s",
-		     c2s ? "C -> S" : "S -> C",
-		     val_to_str(type, packettypenames, "Unknown Type:0x%02x")                     
-		     );
-    }
+    //  if (check_col(pinfo->cinfo, COL_INFO)) {
+    //    col_add_fstr(pinfo->cinfo, COL_INFO, "%s: %s",
+    //		     c2s ? "C -> S" : "S -> C",
+    //		     val_to_str(type, packettypenames, "Unknown Type:0x%02x")                     
+    //		     );
+    //}
     if ( tree ) {
         mc_item = proto_tree_add_protocol_format(tree, proto_minecraft, tvb, offset, length,
                                                 "MC Packet: 0x%02x \"%s\"", type, val_to_str(type, packettypenames, "Unknown"));
@@ -965,7 +978,7 @@ guint get_minecraft_message_len(guint8 type,guint offset, guint available, tvbuf
 
 }
 
-int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
+int dissect_minecraft(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree,void *data _U_)
 {
     guint8 packet;
     guint offset = 0;

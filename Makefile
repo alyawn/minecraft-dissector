@@ -1,5 +1,5 @@
 # Modify to point to your Wireshark and glib include directories
-INCS = -I/usr/include/wireshark -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/glib-2.0/include
+INCS = -I/usr/include/wireshark 
 
 SRCS     = packet-minecraft.c
 
@@ -11,7 +11,7 @@ PLUGIN_NAME = packet-minecraft
 PLUGIN_DIR  = $(HOME)/.wireshark/plugins
 PLUGIN      = $(PLUGIN_DIR)/$(PLUGIN_NAME).so
 
-CFLAGS = -DHAVE_CONFIG_H $(INCS) -DINET6 -D_U_=__attribute__\(\(unused\)\) -Wall -Wpointer-arith -g -DXTHREADS -D_REENTRANT -DXUSE_MTSAFE_API -fPIC -DPIC
+CFLAGS = `pkg-config --cflags --libs glib-2.0` $(INCS) -DINET6 -D_U_=__attribute__\(\(unused\)\) -Wall -Wpointer-arith -g -DXTHREADS -D_REENTRANT -DXUSE_MTSAFE_API -fPIC -DPIC
 
 $(PLUGIN) : $(OBJS)
 	mkdir -p $(PLUGIN_DIR)
